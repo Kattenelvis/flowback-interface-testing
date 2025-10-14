@@ -1,8 +1,6 @@
 {
-    "extends": "../tsconfig.json",
-    "compilerOptions": {
-        "types": [
-            "@playwright/test"
-        ]
-    }
+  "compilerOptions": {
+    "lib": ["es2015"],
+    "types": ["@playwright/test", "node"]
+  }
 }
