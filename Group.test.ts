@@ -5,6 +5,7 @@ import { createPermission } from './permission';
 
 
 test.describe('Group-Integration-Tests', () => {
+    test.describe.configure({ mode: 'serial' });
     const group = { name: "Test Group Group-Testing Public", public: true, invite: false }
 
     test('Create Group', async ({ page }) => {
@@ -18,12 +19,12 @@ test.describe('Group-Integration-Tests', () => {
     })
 
     test('Join Group', async ({ page }) => {
-        await login(page, { email: process.env.SECONDUSER_MAIL, password: "b" })
+        await login(page, { email: process.env.SECONDUSER_MAIL, password:  process.env.SECONDUSER_PASS,})
         await joinGroup(page, group)
     })
 
     test('Leave Group', async ({ page }) => {
-        await login(page, { email: process.env.SECONDUSER_MAIL, password: "b" })
+        await login(page, { email: process.env.SECONDUSER_MAIL, password:  process.env.SECONDUSER_PASS,})
         await gotoGroup(page, group)
         await page.getByRole('button', { name: 'Leave group' }).click();
         await page.getByRole('button', { name: 'Yes', exact: true }).click();
