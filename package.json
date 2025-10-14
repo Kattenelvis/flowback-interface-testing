@@ -1,0 +1,22 @@
+{
+  "name": "flowback-interface-testing",
+  "version": "1.0.0",
+  "description": "Install playwright, and then run playwright commands, as found here: https://playwright.dev/docs/test-cli",
+  "main": "index.js",
+  "scripts": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Kattenelvis/Flowback-Interface-Testing.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Kattenelvis/Flowback-Interface-Testing/issues"
+  },
+  "homepage": "https://github.com/Kattenelvis/Flowback-Interface-Testing#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.56.0",
+    "@types/node": "^24.7.2"
+  }
+}

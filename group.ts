@@ -1,5 +1,5 @@
-import { idfy } from "$lib/Generic/GenericFunctions2";
 import { expect } from "@playwright/test";
+import { idfy } from './generic';
 
 export type group = {
     name: string,

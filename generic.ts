@@ -1,5 +1,9 @@
 import { chromium, expect } from '@playwright/test';
 
+export const idfy = (text: string) => {
+	return text.replace(' ', '-').replace(' ', '-').toLowerCase()
+}
+
 export async function newWindow() {
     const browser = await chromium.launch();
     const Context = await browser.newContext();

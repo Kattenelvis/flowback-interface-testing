@@ -12,7 +12,7 @@ import {
 } from './poll';
 import { login, newWindow, randomString } from './generic';
 import { gotoGroup, createArea, createGroup, joinGroup } from './group';
-import { idfy } from '$lib/Generic/GenericFunctions2';
+import { idfy } from './generic';
 
 test.describe('Basic-Post-Integration-Tests', () => {
 	const group = { name: 'Test Group Poll' + randomString(), public: false };

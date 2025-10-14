@@ -1,5 +1,6 @@
-import { idfy } from '$lib/Generic/GenericFunctions2';
 import { expect } from '@playwright/test';
+import { idfy } from './generic';
+
 
 // Only works inside a poll
 export async function fastForward(page: any, times = 1) {
