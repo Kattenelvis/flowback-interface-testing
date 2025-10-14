@@ -84,7 +84,7 @@ export async function createProposal(page: any, {
     await page.getByLabel('Description  0/').click();
     await page.getByLabel('Description  0/').fill(description);
     await page.getByRole('button', { name: 'Confirm' }).click();
-    expect(await page.getByText('Successfully added proposal').first()).toBeVisible();
+    await expect(await page.getByText('Successfully added proposal').first()).toBeVisible();
 }
 
 export async function predictionStatementCreate(page: any, proposal = { title: "Proposal Title" }, prediction = { title: "Prediction Title" }) {
@@ -142,10 +142,10 @@ export async function vote(page: any, proposal = { title: "Proposal Title", vote
 
 export async function results(page: any) {
     expect(await page.locator('#poll-timeline').filter({ hasText: 'Current: Phase 7. Results and' }))
-    expect(await page.getByText('Results', { exact: true })).toBeVisible();
+    await expect(await page.getByText('Results', { exact: true })).toBeVisible();
 
     //TODO: no need for canvas when there have been 0 votes
-    expect(await page.locator('canvas')).toBeVisible();
+    await expect(await page.locator('canvas')).toBeVisible();
 
     await page.locator('canvas').click({
         position: {

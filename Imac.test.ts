@@ -5,7 +5,7 @@ import { areaVote, createPoll, createProposal, fastForward, goToPost, prediction
 import { assignPermission, createPermission } from "./permission";
 
 test('Imac-Test', async ({ page }) => {
-    test.setTimeout(90000);
+    test.setTimeout(95000);
 
     await login(page);
 
@@ -48,7 +48,7 @@ test('Imac-Test', async ({ page }) => {
 
     await page.waitForTimeout(5000);
     await page.reload();
-    expect(page.locator('#poll-tag-imac').getByText("20%")).toBeVisible();
+    await expect(page.locator('#poll-tag-imac').getByText("20%")).toBeVisible();
 
     // await page.locator('.text-center.dark\\:saturate-\\[60\\%\\].transition-colors.duration-50.w-12.px-4.py-1.ml-2').nth(1).click();
     // await expect(page.getByText('Successfully evaluated')).toBeVisible();

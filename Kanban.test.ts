@@ -6,7 +6,7 @@ test("Kanban-User", async ({ page }) => {
   await login(page);
 
   // Navigate to the kanban page
-  await page.goto("/kanban");
+  await page.goto(`${process.env.LINK}/kanban`);
   await expect(page).toHaveURL(`${process.env.LINK}/kanban`);
 
   // Check if the kanban board is visible
@@ -63,7 +63,7 @@ test("Kanban-Edit", async ({ page }) => {
   await login(page);
 
   // Navigate to the kanban page
-  await page.goto("/kanban");
+  await page.goto(`${process.env.LINK}/kanban`);
   await expect(page).toHaveURL(`${process.env.LINK}/kanban`);
 
   // Check if the kanban board is visible
@@ -111,7 +111,7 @@ test("Kanban-Delete", async ({ page }) => {
   await login(page);
 
   // Navigate to the kanban page
-  await page.goto("/kanban");
+  await page.goto(`${process.env.LINK}/kanban`);
   await expect(page).toHaveURL(`${process.env.LINK}/kanban`);
 
   // Check if the kanban board is visible
