@@ -1,4 +1,15 @@
-Install playwright, and then run playwright commands, as found here: https://playwright.dev/docs/test-cli
+
+```(Bash)
+git clone https://github.com/Kattenelvis/flowback-interface-testing
+```
+
+Install npm packages
+
+```(Bash) 
+npm install```
+```
+
+Then run playwright commands, as found here: https://playwright.dev/docs/test-cli
 
 For instance: 
 
