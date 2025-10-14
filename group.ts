@@ -23,14 +23,14 @@ export async function createGroup(page: any, group: group = { name: 'Test Group'
     else {
         await page.getByRole('link', { name: 'Groups' }).click();
         await page.getByRole('button', { name: 'Create Group' }).click();
-        await page.getByLabel('Title * 0/').click();
-        await page.getByLabel('Title * 0/').fill(group.name);
-        await page.getByLabel('Description  0/').click();
-        await page.getByLabel('Description  0/').fill('Test Group Description');
-        await page.locator(".image-upload > input").nth(0).setInputFiles('./tests/forward-facing-niko-oneshot-isnt-real-it-cant-hurt-you-v0-3ggf23q4ijcf1.webp');
+        await page.getByLabel('Title').click();
+        await page.getByLabel('Title').fill(group.name);
+        await page.getByLabel('Description').click();
+        await page.getByLabel('Description').fill('Test Group Description');
+        await page.locator(".image-upload > input").nth(0).setInputFiles('./image.png');
         await page.getByRole('button', { name: 'Confirm' }).click();
         await page.waitForTimeout(500);
-        await page.locator(".image-upload > input").nth(1).setInputFiles('./tests/forward-facing-niko-oneshot-isnt-real-it-cant-hurt-you-v0-3ggf23q4ijcf1.webp');
+        await page.locator(".image-upload > input").nth(1).setInputFiles('./image.png');
         await page.locator("#cropper-confirm").first().click();
         await page.locator('fieldset').filter({ hasText: 'Public? Yes No' }).getByLabel(group.public ? 'Yes' : 'No').check();
         if (group.public)
@@ -81,17 +81,17 @@ export async function deleteGroup(page: any, group = { name: 'Test Group', publi
     await page.getByRole('button', { name: 'Cancel', exact: true }).click();
     await page.getByRole('button', { name: 'Delete Group' }).click();
     await page.getByRole('button', { name: 'Yes', exact: true }).click();
-    await expect(page).toHaveURL('/groups');
+    await expect(page).toHaveURL(`${process.env.LINK}/groups`);
 }
 
 export async function createArea(page: any, group = { name: 'Test Group', public: false }, tag = "Test Tag") {
     await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click')
     await expect(page.getByRole('button', { name: 'Areas' })).toBeVisible();
     await page.getByRole('button', { name: 'Areas' }).click();
-    await page.getByLabel('Tag * 0/').click();
-    await page.getByLabel('Tag * 0/').fill(tag);
-    await page.getByLabel('Description  0/').click();
-    await page.getByLabel('Description  0/').fill('Tag description');
+    await page.getByLabel('Tag').click();
+    await page.getByLabel('Tag').fill(tag);
+    await page.getByLabel('Description').click();
+    await page.getByLabel('Description').fill('Tag description');
     await page.getByRole('button', { name: 'Add' }).click();
     await expect(page.locator('div:nth-child(3) > div').filter({ hasText: tag })).toHaveText(tag);
 }

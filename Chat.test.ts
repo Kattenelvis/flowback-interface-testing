@@ -5,8 +5,7 @@ import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group';
 test('Group-Chat', async ({ page }) => {
 	await login(page);
 
-	const rand = Math.random().toString(36).slice(2, 10);
-	const group = { name: 'Test Group Chat' + rand, public: true };
+	const group = { name: 'Test Group Chat' + randomString(), public: true };
 
 	await createGroup(page, group);
 

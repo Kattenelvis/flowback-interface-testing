@@ -1,4 +1,5 @@
 import { chromium, expect } from '@playwright/test';
+import 'dotenv/config'
 
 export const idfy = (text: string) => {
 	return text.replace(' ', '-').replace(' ', '-').toLowerCase()
@@ -12,10 +13,10 @@ export async function newWindow() {
 }
 
 export async function login(page: any, {
-    email = process.env.E2E_EMAIL ?? 'a@a.se',
-    password = process.env.E2E_PASSWORD ?? 'a',
+    email = process.env.MAINUSER_MAIL ?? 'a@a.se',
+    password = process.env.MAINUSER_PASS ?? 'a',
 } = {}) {
-    await page.goto('/login');
+    await page.goto(`${process.env.LINK}/login`);
     await expect(page.locator('#login-page')).toBeVisible();
     await page.waitForTimeout(700);
 
@@ -23,7 +24,7 @@ export async function login(page: any, {
     await page.fill('input[name="password"]', password);
     await page.click('button[type="submit"]');
 
-    await expect(page).toHaveURL('/home');
+    await expect(page).toHaveURL(`${process.env.LINK}/home`);
 
     if (await page.getByRole('button', { name: 'Ok' }).isVisible()) {
         await page.getByRole('button', { name: 'Ok' }).click();
@@ -31,18 +32,18 @@ export async function login(page: any, {
 }
 
 export async function loginEnter(page: any, {
-    email = process.env.E2E_EMAIL ?? 'a@a.se',
-    password = process.env.E2E_PASSWORD ?? 'a',
+    email = process.env.MAINUSER_MAIL ?? 'a@a.se',
+    password = process.env.MAINUSER_PASS ?? 'a',
 } = {}) {
-    await page.goto('/login');
+    await page.goto(`${process.env.LINK}/login`);
     await expect(page.locator('#login-page')).toBeVisible();
     await page.waitForTimeout(700);
 
     await page.fill('input[name="email"]', email);
     await page.fill('input[name="password"]', password);
-    await page.getByLabel('Password * 1/').press('Enter');
+    await page.getByLabel('Password').press('Enter');
 
-    await expect(page).toHaveURL('/home');
+    await expect(page).toHaveURL(`${process.env.LINK}/home`);
 }
 
 // Tests registring a user
@@ -93,7 +94,7 @@ export async function register(page: any) {
     await page.getByRole('button', { name: 'Send' }).click();
 
     await expect(page.getByText('Success')).toBeVisible();
-    await expect(page).toHaveURL('/home');
+    await expect(page).toHaveURL(`${process.env.LINK}/home`);
 
     if (await page.getByRole('button', { name: 'Ok' }).isVisible()) {
         await page.getByRole('button', { name: 'Ok' }).click();
