@@ -31,8 +31,6 @@ test('Create-Delete-Schedule-Event', async ({ page }) => {
     await page.getByLabel('End Date').press('Shift+Tab');
     await page.getByLabel('End Date').fill('2027-08-16T00:01');
     await page.getByRole('button', { name: 'Update', exact: true }).click();
-    await page.getByRole('button', { name: 'Cancel', exact: true }).click();
-    
     await page.getByRole('button', { name: 'Delete', exact: true }).click();
     await expect(page.getByText('Event deleted')).toBeVisible();
     await expect(page.getByText('Failed to update event')).toBeHidden();
