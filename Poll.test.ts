@@ -11,7 +11,7 @@ import {
 	vote
 } from './poll';
 import { login, newWindow, randomString } from './generic';
-import { gotoGroup, createArea, createGroup, deleteGroup, joinGroup } from './group';
+import { gotoGroup, createArea, createGroup, joinGroup } from './group';
 import { idfy } from '$lib/Generic/GenericFunctions2';
 
 test.describe('Basic-Post-Integration-Tests', () => {
