@@ -1,3 +1,6 @@
+# Installation Instructions
+
+Clone the repository
 
 ```(Bash)
 git clone https://github.com/Kattenelvis/flowback-interface-testing
