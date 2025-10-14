@@ -25,3 +25,5 @@ npx playwright test . --headed
 ```(Bash) 
 npx playwright test -g "Delegation-Poll" --headed
 ```
+
+It might prompt you to install a testing webbrowser. If that happends, do that.
