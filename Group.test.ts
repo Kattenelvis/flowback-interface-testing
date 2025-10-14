@@ -18,12 +18,12 @@ test.describe('Group-Integration-Tests', () => {
     })
 
     test('Join Group', async ({ page }) => {
-        await login(page, { email: "b@b.se", password: "b" })
+        await login(page, { email: process.env.SECONDUSER_MAIL, password: "b" })
         await joinGroup(page, group)
     })
 
     test('Leave Group', async ({ page }) => {
-        await login(page, { email: "b@b.se", password: "b" })
+        await login(page, { email: process.env.SECONDUSER_MAIL, password: "b" })
         await gotoGroup(page, group)
         await page.getByRole('button', { name: 'Leave group' }).click();
         await page.getByRole('button', { name: 'Yes', exact: true }).click();
@@ -52,7 +52,7 @@ test.describe('Create-Delete-Group Invite only', () => {
     test('Ask to Join Group Invite', async ({ page }) => {
         await login(page)
         const bPage = await newWindow()
-        await login(bPage, { email: "b@b.se", password: "b" })
+        await login(bPage, { email: process.env.SECONDUSER_MAIL, password: "b" })
         await joinGroup(bPage, groupInvite)
 
         await gotoGroup(page, groupInvite)
@@ -64,7 +64,7 @@ test.describe('Create-Delete-Group Invite only', () => {
 
     test('Leave Group Invite', async ({ page }) => {
         const bPage = await newWindow()
-        await login(bPage, { email: "b@b.se", password: "b" })
+        await login(bPage, { email: process.env.SECONDUSER_MAIL, password: "b" })
         await gotoGroup(bPage, groupInvite)
         await bPage.getByRole('button', { name: 'Leave group' }).click();
         await bPage.getByRole('button', { name: 'Yes', exact: true }).click();

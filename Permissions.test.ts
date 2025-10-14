@@ -2,6 +2,7 @@ import test, { expect } from "@playwright/test";
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from "./group";
 import { login, newWindow } from "./generic";
 import { assignPermission, createPermission } from "./permission";
+import 'dotenv/config'
 
 test('Create-Permission-Full', async ({ page }) => {
     await login(page);
@@ -17,7 +18,7 @@ test('Create-Permission-Full', async ({ page }) => {
 
     const bPage = await newWindow();
 
-    await login(bPage, { email: 'b@b.se', password: 'b' });
+    await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS });
     await joinGroup(bPage, group);
     await page.waitForTimeout(400);
 
@@ -46,7 +47,7 @@ test('Create-Permission-None', async ({ page }) => {
 
     const bPage = await newWindow();
 
-    await login(bPage, { email: 'b@b.se', password: 'b' });
+    await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS });
     await joinGroup(bPage, group);
 
     await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click')

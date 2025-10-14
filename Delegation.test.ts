@@ -4,6 +4,7 @@ import { createPoll, createProposal, fastForward, goToPost, vote } from './poll'
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group';
 import { becomeDelegate } from './delegation';
 import { idfy } from './generic';
+import 'dotenv/config'
 
 test('Become-Delegate', async ({ page }) => {
 	await login(page);
@@ -33,7 +34,7 @@ test('Delegation-Poll', async ({ page }) => {
 	const bContext = await browser.newContext();
 	const bPage = await bContext.newPage();
 
-	await login(bPage, { email: 'b@b.se', password: 'b' });
+	await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS });
 	await joinGroup(bPage, group);
 
 	await page.waitForTimeout(1000);

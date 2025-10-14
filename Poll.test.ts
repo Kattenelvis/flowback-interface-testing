@@ -13,6 +13,7 @@ import {
 import { login, newWindow, randomString } from './generic';
 import { gotoGroup, createArea, createGroup, joinGroup } from './group';
 import { idfy } from './generic';
+import 'dotenv/config'
 
 test.describe('Basic-Post-Integration-Tests', () => {
 	const group = { name: 'Test Group Poll' + randomString(), public: false };
@@ -284,7 +285,7 @@ test('Prediction-Probabilities', async ({ page }) => {
 
 	const bPage = await newWindow();
 
-	await login(bPage, { email: 'b@b.se', password: 'b' });
+	await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS });
 
 	await joinGroup(bPage, group);
 
@@ -340,7 +341,7 @@ test('Prediction-Probabilities-2', async ({ page }) => {
 
 	const bPage = await newWindow();
 
-	await login(bPage, { email: 'b@b.se', password: 'b' });
+	await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS });
 
 	await joinGroup(bPage, group);
 

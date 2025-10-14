@@ -1,6 +1,7 @@
 import { test, expect, firefox, chromium } from '@playwright/test';
 import { login, logout, randomString } from './generic';
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group';
+import 'dotenv/config'
 
 test('Group-Chat', async ({ page }) => {
 	await login(page);
@@ -13,7 +14,7 @@ test('Group-Chat', async ({ page }) => {
 	const bContext = await browser.newContext();
 	const bPage = await bContext.newPage();
 
-	await login(bPage, { email: 'b@b.se', password: 'b' });
+	await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS });
 	await joinGroup(bPage, group);
 
 	await page.reload();
@@ -64,7 +65,7 @@ test('Direct-Chat-Via-Group', async ({ page }) => {
 	const bContext = await browser.newContext();
 	const bPage = await bContext.newPage();
 
-	await login(bPage, { email: 'b@b.se', password: 'b' });
+	await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS });
 	await joinGroup(bPage, group);
 	await gotoGroup(bPage, group);
 
