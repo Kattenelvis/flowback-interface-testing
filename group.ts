@@ -67,6 +67,7 @@ export async function joinGroup(page: any, group = { name: 'Test Group' }) {
     await page.getByRole('heading', { name: group.name, exact: true });
     const joinButton = await page.locator(`#join-${idfy(group.name)}`).first();
     console.log(`#join-${idfy(group.name)}`);
+    expect(joinButton).toBeVisible()
     
     
     // await expect(joinButton).toBeVisible();

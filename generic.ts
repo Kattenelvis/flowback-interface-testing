@@ -2,7 +2,7 @@ import { chromium, expect } from '@playwright/test';
 import 'dotenv/config'
 
 export const idfy = (text: string) => {
-	return text.replace(' ', '-').replace(' ', '-').toLowerCase()
+	return text.replace(' ', '-').replace(' ', '-').replace(' ', '-').replace(' ', '-').replace(' ', '-').toLowerCase()
 }
 
 export async function newWindow() {

@@ -6,7 +6,7 @@ import 'dotenv/config'
 test('Group-Chat', async ({ page }) => {
 	await login(page);
 
-	const group = { name: 'Test Group Chat' + randomString(), public: true };
+	const group = { name: 'test-group-chat' + randomString(), public: true };
 
 	await createGroup(page, group);
 
@@ -38,7 +38,7 @@ test('Group-Chat', async ({ page }) => {
 	await bPage.getByRole('button', { name: 'open chat' }).click();
 	await bPage.getByPlaceholder('Search chatters').click();
 	await bPage.getByPlaceholder('Search chatters').fill(group.name);
-	await bPage.getByRole('button', { name: group.name }).click();
+	await bPage.getByRole('button', { name: group.name }).first().click();
 	await page.waitForTimeout(300);
 	await bPage.getByPlaceholder('Write a message...').fill('Hello!! :D');
 	await bPage.getByPlaceholder('Write a message...').press('Enter');
