@@ -33,7 +33,7 @@ export async function assignPermission(page: any, group = { name: 'Test Group', 
     await page.getByRole('button', { name: 'Permissions' }).click();
     await page.getByRole('button', { name: 'Assign' }).click();
 
-    console.log(`#plus-${idfy(user_name)}`);
+    // console.log(`#plus-${idfy(user_name)}`);
     
     const addRoleButton = page.locator(`#plus-${idfy(user_name)}`)
     await expect(addRoleButton).toBeVisible();

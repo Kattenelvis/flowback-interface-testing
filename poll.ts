@@ -35,8 +35,8 @@ export async function createPoll(page: any, {
     await page.getByRole('spinbutton').fill(phase_time.toString());
 
     await page.getByRole('button', { name: 'Post' }).click();
-    await expect(page.getByText('Could not create Poll')).not.toBeVisible();
     await expect(page.getByText('Poll Created')).toBeVisible();
+    await expect(page.getByText('Could not create Poll')).not.toBeVisible();
 
     await page.waitForTimeout(500);
     expect(await page.getByRole('heading', { name: title })).toBeVisible();
@@ -48,9 +48,9 @@ export async function goToPost(page: any, {
     await page.getByRole('link', { name: 'Home' }).click();
     await page.getByPlaceholder('Search polls').click();
     await page.getByPlaceholder('Search polls').fill(title);
-    expect(await page.locator('#thumbnails > div').getByRole('link', { name: title, exact: true }).first()).toBeVisible();
+    await expect(await page.locator('#thumbnails > div').getByRole('link', { name: title, exact: true }).first()).toBeVisible();
     await page.locator('#thumbnails > div').getByRole('link', { name: title, exact: true }).first().click();
-    expect(await page.getByRole('heading', { name: title })).toBeVisible();
+    await expect(await page.getByRole('heading', { name: title })).toBeVisible();
 
     // expect(await page.locator('#poll-thumbnail-140').getByRole('link', { name: 'Test Poll' })).toBeVisible();
 }

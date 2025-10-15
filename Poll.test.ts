@@ -16,6 +16,7 @@ import { idfy } from './generic';
 import 'dotenv/config'
 
 test.describe('Basic-Post-Integration-Tests', () => {
+	test.describe.configure({ mode: 'serial' })
 	const group = { name: 'Test Group Poll' + randomString(), public: false };
 	const poll = { title: 'Test Poll Create and Go ' + randomString(), date: false };
 

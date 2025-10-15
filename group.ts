@@ -57,7 +57,7 @@ export async function gotoGroup(page: any, group = { name: 'Test Group' }) {
 
 export async function gotoFirstGroup(page: any) {
     await page.locator("#groups").click();
-    await page.locator("#groups-list > div").first().click();
+    await page.locator("#groups-list > button").nth(1).click();
 }
 
 export async function joinGroup(page: any, group = { name: 'Test Group' }) {
@@ -66,7 +66,7 @@ export async function joinGroup(page: any, group = { name: 'Test Group' }) {
     await page.getByPlaceholder('Search groups').fill(group.name);
     await page.getByRole('heading', { name: group.name, exact: true });
     const joinButton = await page.locator(`#join-${idfy(group.name)}`).first();
-    console.log(`#join-${idfy(group.name)}`);
+    // console.log(`#join-${idfy(group.name)}`);
     await expect(joinButton).toBeVisible()
     
     
