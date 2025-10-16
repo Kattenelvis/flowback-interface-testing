@@ -22,9 +22,9 @@ export async function createPoll(page: any, {
     await page.getByRole('button', { name: 'Create a post' }).click();
     await page.waitForTimeout(300);
     expect(await page.getByText('PollThread')).toBeVisible();
-    await page.getByLabel('Title * 0/').click();
-    await page.getByLabel('Title * 0/').fill(title);
-    await page.getByLabel('Description  0/').fill('Test Description');
+    await page.getByLabel('Title').click();
+    await page.getByLabel('Title').fill(title);
+    await page.getByLabel('Description').fill('Test Description');
 
     if (date) await page.getByLabel('Date Poll').check();
 

@@ -5,6 +5,7 @@ import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group';
 import { becomeDelegate } from './delegation';
 import { idfy } from './generic';
 import 'dotenv/config'
+import { assignPermission, createPermission } from './permission';
 
 test('Become-Delegate', async ({ page }) => {
 	await login(page);
@@ -49,8 +50,9 @@ test('Delegation-Poll', async ({ page }) => {
 	await gotoGroup(page, group);
 	await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click');
 	//Give b voting rights
-	// await createPermission(page, group, [2]);
-	// await assignPermission(page, group, "Test Permission", "bb");
+	const permission_name = "Test Permission" + randomString();
+	await createPermission(page, group, [ ], permission_name);
+	await assignPermission(page, group, permission_name, process.env.SECONDUSER_NAME);
 
 	await gotoGroup(page, group);
 

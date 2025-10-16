@@ -92,3 +92,54 @@ test('Direct-Chat-Via-Group', async ({ page }) => {
 
 	await deleteGroup(page, group);
 });
+
+test('Workgroup-Chat', async ({ page }) => {
+	await login(page);
+
+	const group = { name: 'Test Group Chat Workgroup' + randomString(), public: true };
+
+	await createGroup(page, group);
+
+	const browser = await chromium.launch();
+	const bContext = await browser.newContext();
+	const bPage = await bContext.newPage();
+
+	await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS });
+	await joinGroup(bPage, group);
+	await gotoGroup(bPage, group);
+
+	await page.getByRole('button', { name: 'Work Groups' }).click();
+	await page.getByRole('button', { name: '+ Add Workgroup' }).click();
+	await page.getByLabel('Name').click();
+
+	const workgroup = 'Workgroup for chatting in yay'
+	await page.getByLabel('Name').fill(workgroup);
+	await page.getByRole('button', { name: 'Create', exact: true }).click();
+	await page.getByRole('button', { name: 'Join', exact: true }).click();
+
+	await bPage.getByRole('button', { name: 'Work Groups' }).click();
+	await bPage.getByRole('button', { name: 'Join', exact: true }).click();
+
+	await page.reload();
+	await page.getByRole('button', { name: 'open chat' }).click();
+	await page.getByRole('button', { name: workgroup }).click();
+	await page.getByPlaceholder('Write a message...').click();
+	await page.getByPlaceholder('Write a message...').fill('Hello!! :D');
+	await page.locator('form > button:nth-child(2)').click();
+	await page.getByPlaceholder('Write a message...').click();
+
+	await bPage.reload();
+	await bPage.getByRole('button', { name: 'open chat' }).click();
+	await bPage.getByRole('button', { name: workgroup }).click();
+	await bPage.getByPlaceholder('Write a message...').fill('Hello!! :D');
+	await bPage.getByPlaceholder('Write a message...').press('Enter');
+
+	await expect(page.getByText('Hello!! :D').nth(1)).toBeVisible();
+	await expect(page.getByText('Hello!! :D').nth(2)).toBeVisible();
+
+	await expect(bPage.getByText('Hello!! :D').nth(1)).toBeVisible();
+	await expect(bPage.getByText('Hello!! :D').nth(2)).toBeVisible();
+
+	await page.getByRole('button', { name: 'Close modal' }).click();
+
+});
