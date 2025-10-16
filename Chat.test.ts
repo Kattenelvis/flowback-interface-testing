@@ -1,5 +1,5 @@
 import { test, expect, firefox, chromium } from '@playwright/test';
-import { login, logout, randomString } from './generic';
+import { login, logout, newWindow, randomString } from './generic';
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group';
 import 'dotenv/config'
 
@@ -100,9 +100,7 @@ test('Workgroup-Chat', async ({ page }) => {
 
 	await createGroup(page, group);
 
-	const browser = await chromium.launch();
-	const bContext = await browser.newContext();
-	const bPage = await bContext.newPage();
+	const bPage = await newWindow();
 
 	await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS });
 	await joinGroup(bPage, group);
@@ -143,3 +141,31 @@ test('Workgroup-Chat', async ({ page }) => {
 	await page.getByRole('button', { name: 'Close modal' }).click();
 
 });
+
+// TODO Fix this, will require finessing with registring new users
+test('Group-Chat-Creation', async ({ page }) => {
+	await login(page)
+
+	// Testing error functionality
+	await page.getByRole('button', { name: 'open chat' }).click();
+	await page.getByRole('button', { name: '+ New Group' }).click();
+	await page.getByRole('button', { name: 'Cancel' }).click();
+	await page.getByRole('button', { name: '+ New Group' }).click();
+	await page.getByRole('button', { name: 'Confirm' }).click();
+	await expect(page.getByText('Failed to created group chat')).toBeVisible();
+
+	// Creating the group and checking that it was created
+	await page.getByRole('button', { name: 'avatar bb, a_edited Hello!! :D' }).click();
+	await page.locator(`[id="chat-${process.env.SECONDUSER_NAME},-${process.env.MAINUSER_NAME}"]`).getByRole('button', { name: 'Add User' }).click();
+	await page.locator(`[id="chat-b},-${process.env.MAINUSER_NAME}"]`).getByRole('button', { name: 'Add User' }).click();
+	await page.getByRole('button', { name: 'Confirm' }).click();
+	await expect(page.getByText('Failed to created group chat')).not.toBeVisible();
+
+	// Have other users chat
+	const bPage = await newWindow();
+	const cPage = await newWindow();
+
+	await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS })
+	await login(cPage, { email: "b@b.com", password: "b" })
+
+})
