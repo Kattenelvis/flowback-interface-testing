@@ -6,7 +6,7 @@ import { createPermission } from './permission';
 
 test.describe('Group-Integration-Tests', () => {
     test.describe.configure({ mode: 'serial' });
-    const group = { name: "Test Group Group-Testing Public", public: true, invite: false }
+    const group = { name: "Test Group Group-Testing Public" + randomString(), public: true, invite: false }
 
     test('Create Group', async ({ page }) => {
         await login(page)

@@ -110,7 +110,7 @@ test('Workgroup-Chat', async ({ page }) => {
 	await page.getByRole('button', { name: '+ Add Workgroup' }).click();
 	await page.getByLabel('Name').click();
 
-	const workgroup = 'Workgroup for chatting in yay'
+	const workgroup = 'Workgroup for chatting in yay' + randomString()
 	await page.getByLabel('Name').fill(workgroup);
 	await page.getByRole('button', { name: 'Create', exact: true }).click();
 	await page.getByRole('button', { name: 'Join', exact: true }).click();
@@ -120,14 +120,19 @@ test('Workgroup-Chat', async ({ page }) => {
 
 	await page.reload();
 	await page.getByRole('button', { name: 'open chat' }).click();
+
+	await page.getByPlaceholder('Search chatters').click();
+	await page.getByPlaceholder('Search chatters').fill(workgroup);
 	await page.getByRole('button', { name: workgroup }).click();
 	await page.getByPlaceholder('Write a message...').click();
 	await page.getByPlaceholder('Write a message...').fill('Hello!! :D');
 	await page.locator('form > button:nth-child(2)').click();
 	await page.getByPlaceholder('Write a message...').click();
 
-	await bPage.reload();
+	// await bPage.reload();
 	await bPage.getByRole('button', { name: 'open chat' }).click();
+	await bPage.getByPlaceholder('Search chatters').click();
+	await bPage.getByPlaceholder('Search chatters').fill(workgroup);
 	await bPage.getByRole('button', { name: workgroup }).click();
 	await bPage.getByPlaceholder('Write a message...').fill('Hello!! :D');
 	await bPage.getByPlaceholder('Write a message...').press('Enter');

@@ -1,7 +1,7 @@
 import { expect } from "@playwright/test";
 
 export async function becomeDelegate(page: any, group = { name: 'Test Group Delegation' }) {
-    await page.getByRole('link', { name: 'Delegations' }).click();
+    await page.getByRole('link', { name: 'Delegations' }).first().click();
 
     await page.locator('#delegate-group-select').selectOption({ label: group.name });
     await page.waitForTimeout(1000);
