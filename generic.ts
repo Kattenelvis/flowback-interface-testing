@@ -25,9 +25,8 @@ export async function login(page: any, {
     await page.click('button[type="submit"]');
 
     await expect(page).toHaveURL(`${process.env.LINK}/home`);
-
-    if (await page.getByRole('button', { name: 'Ok' }).isVisible()) {
-        await page.getByRole('button', { name: 'Ok' }).click();
+    if (await page.getByRole('button', { name: 'Ok', exact: true }).isVisible()) {
+        await page.getByRole('button', { name: 'Ok', exact: true }).click();
     }
 }
 

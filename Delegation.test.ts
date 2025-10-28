@@ -23,7 +23,7 @@ test('Become-Delegate', async ({ page }) => {
 test('Delegation-Poll', async ({ page }) => {
 	await login(page);
 
-	const group = { name: 'Test Group Delegation', public: true };
+	const group = { name: 'Test Group Delegation' + randomString(), public: true };
 
 	await createGroup(page, group);
 
@@ -40,7 +40,10 @@ test('Delegation-Poll', async ({ page }) => {
 
 	await page.waitForTimeout(1000);
 	await bPage.getByRole('link', { name: 'Delegations' }).click();
-	await bPage.locator('#delegate-group-select').selectOption({ label: group.name });
+	// await bPage.locator('#delegate-group-select').selectOption({ label: group.name });
+	await bPage.getByRole('textbox', { name: '0/' }).click();
+	await bPage.getByRole('textbox', { name: '0/' }).fill(group.name);
+
 	await page.waitForTimeout(1000);
 	await bPage.getByRole('button', { name: 'Uncategorised' }).click();
 	await page.waitForTimeout(1000);
@@ -51,7 +54,7 @@ test('Delegation-Poll', async ({ page }) => {
 	await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click');
 	//Give b voting rights
 	const permission_name = "Test Permission" + randomString();
-	await createPermission(page, group, [ ], permission_name);
+	await createPermission(page, group, [], permission_name);
 	await assignPermission(page, group, permission_name, process.env.SECONDUSER_NAME);
 
 	await gotoGroup(page, group);

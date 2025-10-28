@@ -39,7 +39,7 @@ export async function assignPermission(page: any, group = { name: 'Test Group', 
     await expect(addRoleButton).toBeVisible();
     await addRoleButton.click();
 
-    await page.getByRole('listitem').locator(`#permission-${idfy(permission_name)}`).nth(0).click();
+    await page.getByRole('listitem').locator(`#permission-${idfy(permission_name)}-${idfy(user_name)}`).click();
 
     await expect(page.getByText('Successfully updated permission')).toBeVisible();
 }
