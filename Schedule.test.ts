@@ -4,7 +4,7 @@ import { login } from './generic';
 test('Create-Delete-Schedule-Event', async ({ page }) => {
     await login(page);
 
-    await page.getByRole('link', { name: 'Schedule' }).click();
+    await page.getByRole('button', { name: 'Schedule' }).click();
     await page.getByRole('button', { name: '15' }).dblclick();
     await page.getByLabel('Title').fill('Event at 15:th');
     await page.getByLabel('Description').fill('This is a test event at 15:th');

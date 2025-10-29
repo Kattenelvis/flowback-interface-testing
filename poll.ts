@@ -45,7 +45,7 @@ export async function createPoll(page: any, {
 export async function goToPost(page: any, {
     title = 'Test Poll'
 }) {
-    await page.getByRole('link', { name: 'Home' }).click();
+    await page.getByRole('button', { name: 'Home' }).click();
     await page.getByPlaceholder('Search polls').click();
     await page.getByPlaceholder('Search polls').fill(title);
     await expect(await page.locator('#thumbnails > div').getByRole('link', { name: title, exact: true }).first()).toBeVisible();

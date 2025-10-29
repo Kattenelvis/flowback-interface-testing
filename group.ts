@@ -21,7 +21,7 @@ export async function createGroup(page: any, group: group = { name: 'Test Group'
         await button.click();
     }
     else {
-        await page.getByRole('link', { name: 'Groups' }).click();
+        await page.getByRole('button', { name: 'Groups' }).click();
         await page.getByRole('button', { name: 'Create Group' }).click();
         await page.getByLabel('Title').click();
         await page.getByLabel('Title').fill(group.name);

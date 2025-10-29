@@ -39,7 +39,7 @@ test('Delegation-Poll', async ({ page }) => {
 	await joinGroup(bPage, group);
 
 	await page.waitForTimeout(1000);
-	await bPage.getByRole('link', { name: 'Delegations' }).click();
+	await bPage.getByRole('button', { name: 'Delegations' }).click();
 	// await bPage.locator('#delegate-group-select').selectOption({ label: group.name });
 	await bPage.getByRole('textbox', { name: '0/' }).click();
 	await bPage.getByRole('textbox', { name: '0/' }).fill(group.name);
