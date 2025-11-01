@@ -10,10 +10,7 @@ test('Group-Chat', async ({ page }) => {
 
 	await createGroup(page, group);
 
-	const browser = await chromium.launch();
-	const bContext = await browser.newContext();
-	const bPage = await bContext.newPage();
-
+	const bPage = await newWindow();
 	await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS });
 	await joinGroup(bPage, group);
 
