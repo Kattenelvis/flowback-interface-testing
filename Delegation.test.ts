@@ -54,7 +54,7 @@ test('Delegation-Poll', async ({ page }) => {
 	await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click');
 	//Give b voting rights
 	const permission_name = "Test Permission" + randomString();
-	await createPermission(page, group, [], permission_name);
+	await createPermission(page, group, [2], permission_name);
 	await assignPermission(page, group, permission_name, process.env.SECONDUSER_NAME);
 
 	await gotoGroup(page, group);

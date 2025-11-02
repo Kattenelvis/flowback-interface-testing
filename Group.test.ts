@@ -3,6 +3,13 @@ import { idfy, login, newWindow, randomString } from './generic';
 import { createGroup, deleteGroup, gotoFirstGroup, gotoGroup, joinGroup } from './group';
 import { createPermission } from './permission';
 
+// TODO: Add test for this situation:
+// User a creates a group which is invite only
+// User b asks to join
+// User a accepts b's request to join
+// User b leaves the group
+// User b asks to join again
+// User a tries to reject, but it says error 400, "User already joined"
 
 test.describe('Group-Integration-Tests', () => {
     test.describe.configure({ mode: 'serial' });
@@ -96,7 +103,7 @@ test('Group-Invite', async ({ page }) => {
 
     await page.getByRole('textbox', { name: 'User to invite' }).click();
     await page.getByRole('textbox', { name: 'User to invite' }).fill(process.env.SECONDUSER_NAME);
- 
+
     await page.getByRole('listitem').getByRole('button').filter({ hasText: /^$/ }).click();
     await expect(page.getByText('Successfully sent invite')).toBeVisible();
 
