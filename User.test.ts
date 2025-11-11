@@ -5,8 +5,6 @@ test('Edit User', async ({ page }) => {
     await login(page);
     await page.getByRole('button', { name: 'default pfp' }).click();
     await page.getByRole('button', { name: 'User Profile', exact: true }).click();
-    await page.getByRole('button').nth(3).click();
-    await page.getByRole('button', { name: 'default pfp' }).click();
     await expect(page.getByText('Contact Information')).toBeVisible();
     await page.locator("#edit-profile-button").click();
     await page.getByLabel('Name').fill('a edited');

@@ -30,4 +30,9 @@ test('Group-Notification', async ({ page }) => {
 
     // TOOD: Once notification system is done, set an expect here to get the right message and that the notification link leads to the right poll
 
+    await page.locator('#notifications-list').click();
+    await expect(page.getByRole('button', { name: 'A new poll has been posted' }).nth(1)).toBeVisible();
+
+    await bPage.locator('#notifications-list').click();
+    await expect(bPage.getByRole('button', { name: 'A new poll has been posted' }).nth(1)).toBeVisible();
 })

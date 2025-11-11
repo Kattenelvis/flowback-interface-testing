@@ -1,7 +1,7 @@
 import test, { expect } from "@playwright/test";
 import { login, newWindow, randomString } from "./generic";
 import { createArea, createGroup, gotoGroup, joinGroup } from "./group";
-import { areaVote, createPoll, createProposal, fastForward, goToPost, predictionProbability, predictionStatementCreate } from "./poll";
+import { areaVote, createPoll, createProposal, fastForward, goToPost, predictionProbability, predictionStatementCreate, vote } from "./poll";
 import { assignPermission, createPermission } from "./permission";
 
 test('Imac-Test', async ({ page }) => {
@@ -25,7 +25,7 @@ test('Imac-Test', async ({ page }) => {
 
     await fastForward(page, 1);
 
-    const proposal = { title: "Test 1" }
+    const proposal = { title: "Test 1", vote: 2 }
     await createProposal(page, proposal);
 
     await fastForward(page, 1);
@@ -36,7 +36,11 @@ test('Imac-Test', async ({ page }) => {
 
     await predictionProbability(page, proposal);
 
-    await fastForward(page, 3);
+    await fastForward(page, 2);
+
+    await vote(page, proposal);
+
+    await fastForward(page, 1);
 
     // //TODO Make the test shorter. There's a way to do this in pollCreate with all of the phase times being identical.
     await page.waitForTimeout(70000);
