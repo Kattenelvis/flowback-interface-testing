@@ -52,7 +52,7 @@ export async function register(page: any) {
     const randomUsername = randomString();
     const randomEmail = `${randomUsername}@flowback.test`;
 
-    await page.goto('/login');
+    await page.goto(`${process.env.LINK}/login`);
     await expect(page.locator('#login-page')).toBeVisible();
     await page.waitForTimeout(500);
 

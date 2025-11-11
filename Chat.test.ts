@@ -166,6 +166,54 @@ test('Group-Chat-Creation', async ({ page }) => {
 	// Creating the group and checking that it was created
 	// await page.getByRole('button', { name: 'avatar bb, a_edited' }).click();
 	await page.locator(`[id="chat-${process.env.SECONDUSER_NAME},-${process.env.MAINUSER_NAME}"]`).getByRole('button', { name: 'Add User' }).click();
+
+	await page.getByRole('button', { name: 'avatar + Invite user' }).nth(1).click();
+	await page.getByRole('textbox', { name: 'User to invite' }).click();
+	await page.getByRole('textbox', { name: 'User to invite' }).fill(username);
+	await page.getByRole('button', { name: 'Add Me!', exact: true }).click();
+	await page.getByRole('button', { name: 'Close modal' }).nth(3).click();
 	await page.getByRole('button', { name: 'Confirm' }).click();
 	await expect(page.getByText('Failed to created group chat')).not.toBe;
+
+
+	const groupname = `${process.env.MAINUSER_NAME}, ${process.env.SECONDUSER_NAME}, ${username}`;
+	// Write messages and check that they are visible
+	await page.getByPlaceholder('Write a message...').click();
+	await page.getByPlaceholder('Write a message...').fill('Hello!! :D');
+	await page.waitForTimeout(300);
+	await page.locator('form > button:nth-child(2)').click();
+	await page.getByPlaceholder('Write a message...').click();
+	await page.waitForTimeout(300);
+
+	await bPage.getByRole('button', { name: 'open chat' }).click();
+	await bPage.getByPlaceholder('Search chatters').click();
+	await bPage.getByPlaceholder('Search chatters').fill(groupname);
+	await bPage.getByRole('button', { name: groupname }).first().click();
+	await page.waitForTimeout(300);
+	await bPage.getByPlaceholder('Write a message...').fill('Hello!! :D');
+	await bPage.getByPlaceholder('Write a message...').press('Enter');
+	await page.waitForTimeout(300);
+
+	await cPage.getByRole('button', { name: 'open chat' }).click();
+	await cPage.getByPlaceholder('Search chatters').click();
+	await cPage.getByPlaceholder('Search chatters').fill(groupname);
+	await cPage.getByRole('button', { name: groupname }).first().click();
+	await page.waitForTimeout(300);
+	await cPage.getByPlaceholder('Write a message...').fill('Hello!! :D');
+	await cPage.getByPlaceholder('Write a message...').press('Enter');
+	await page.waitForTimeout(300);
+
+
+	await expect(page.getByText('Hello!! :D').nth(1)).toBeVisible();
+	await expect(page.getByText('Hello!! :D').nth(2)).toBeVisible();
+	await expect(page.getByText('Hello!! :D').nth(3)).toBeVisible();
+
+	await expect(bPage.getByText('Hello!! :D').nth(1)).toBeVisible();
+	await expect(bPage.getByText('Hello!! :D').nth(2)).toBeVisible();
+	await expect(bPage.getByText('Hello!! :D').nth(3)).toBeVisible();
+
+	await expect(cPage.getByText('Hello!! :D').nth(1)).toBeVisible();
+	await expect(cPage.getByText('Hello!! :D').nth(2)).toBeVisible();
+	await expect(cPage.getByText('Hello!! :D').nth(3)).toBeVisible();
+
 })
