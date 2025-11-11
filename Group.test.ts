@@ -46,7 +46,7 @@ test.describe('Group-Integration-Tests', () => {
 
 test.describe('Create-Delete-Group Invite only', () => {
     test.describe.configure({ mode: 'serial' });
-    const groupInvite = { name: "Test Group Group-Testing Invite only", public: true, invite: true }
+    const groupInvite = { name: "Test Group Group-Testing Invite only" + randomString(), public: true, invite: true }
 
     test('Create Group Invite', async ({ page }) => {
         await login(page)
@@ -162,12 +162,12 @@ test('Create-Delete-Group', async ({ page }) => {
     await page.getByRole('button', { name: 'Delete', exact: true }).nth(1).click();
     // Create, deactive and delete area
     await page.getByRole('button', { name: 'Areas' }).click();
-    await page.getByLabel('Tag * 0/').click();
-    await page.getByLabel('Tag * 0/').fill('Test Tag');
-    await page.getByLabel('Description  0/').click();
-    await page.getByLabel('Description  0/').fill('Test tag description');
+    await page.getByLabel('Tag').click();
+    await page.getByLabel('Tag').fill('Test Tag');
+    await page.getByLabel('Description').click();
+    await page.getByLabel('Description').fill('Test tag description');
     await page.getByRole('button', { name: 'Add' }).click();
-    await expect(page.locator('div:nth-child(3) > div').first()).toHaveText('Test Tag');
+    await expect(page.locator(`#test-tag`).first()).toHaveText('Test Tag');
     await page.locator('.slider').first().click();
     await page.locator('.text-red-500').first().click();
     await page.getByRole('button', { name: 'No', exact: true }).click();
