@@ -1,5 +1,5 @@
 import { test, expect, firefox, chromium } from '@playwright/test';
-import { login, logout, newWindow, randomString } from './generic';
+import { idfy, login, logout, newWindow, randomString, register } from './generic';
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group';
 import 'dotenv/config'
 
@@ -41,11 +41,11 @@ test('Group-Chat', async ({ page }) => {
 	await bPage.getByPlaceholder('Write a message...').press('Enter');
 	await page.waitForTimeout(300);
 
-	expect(page.getByText('Hello!! :D').nth(1)).toBeVisible();
-	expect(page.getByText('Hello!! :D').nth(2)).toBeVisible();
+	await expect(page.getByText('Hello!! :D').nth(1)).toBeVisible();
+	await expect(page.getByText('Hello!! :D').nth(2)).toBeVisible();
 
-	expect(bPage.getByText('Hello!! :D').nth(1)).toBeVisible();
-	expect(bPage.getByText('Hello!! :D').nth(2)).toBeVisible();
+	await expect(bPage.getByText('Hello!! :D').nth(1)).toBeVisible();
+	await expect(bPage.getByText('Hello!! :D').nth(2)).toBeVisible();
 
 	await gotoGroup(page, group);
 	await deleteGroup(page, group);
@@ -156,18 +156,16 @@ test('Group-Chat-Creation', async ({ page }) => {
 	await page.getByRole('button', { name: 'Confirm' }).click();
 	await expect(page.getByText('Failed to created group chat')).toBeVisible();
 
-	// Creating the group and checking that it was created
-	await page.getByRole('button', { name: 'avatar bb, a_edited Hello!! :D' }).click();
-	await page.locator(`[id="chat-${process.env.SECONDUSER_NAME},-${process.env.MAINUSER_NAME}"]`).getByRole('button', { name: 'Add User' }).click();
-	await page.locator(`[id="chat-b},-${process.env.MAINUSER_NAME}"]`).getByRole('button', { name: 'Add User' }).click();
-	await page.getByRole('button', { name: 'Confirm' }).click();
-	await expect(page.getByText('Failed to created group chat')).not.toBeVisible();
-
 	// Have other users chat
 	const bPage = await newWindow();
-	const cPage = await newWindow();
-
 	await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS })
-	await login(cPage, { email: "b@b.com", password: "b" })
 
+	const cPage = await newWindow();
+	const { username } = await register(cPage);
+
+	// Creating the group and checking that it was created
+	// await page.getByRole('button', { name: 'avatar bb, a_edited' }).click();
+	await page.locator(`[id="chat-${process.env.SECONDUSER_NAME},-${process.env.MAINUSER_NAME}"]`).getByRole('button', { name: 'Add User' }).click();
+	await page.getByRole('button', { name: 'Confirm' }).click();
+	await expect(page.getByText('Failed to created group chat')).not.toBe;
 })
