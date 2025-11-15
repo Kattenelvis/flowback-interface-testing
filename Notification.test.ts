@@ -77,6 +77,8 @@ test('Poll-Start-To-Finish', async ({ page }) => {
 
     await expect(page.getByText('Results There is no winning')).toBeVisible();
 
+    //TODO second comment and poll ff notifications, maybe also evaluation.
+
     await comment(page, "Notify about me please")
 });
 
