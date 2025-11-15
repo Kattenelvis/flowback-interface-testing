@@ -92,6 +92,18 @@ test('Proposal-Test', async ({ page }) => {
 	await fastForward(page, 1);
 
 	await createProposal(page, { title: 'Lol', description: 'Description funny' });
+
+	// Testing comment tagging and filtering system
+	// TODO: Expand this test
+	await page.getByPlaceholder('Write a comment...').click();
+	await page.getByPlaceholder('Write a comment...').fill('#');
+	await page.getByRole('button', { name: 'Lol' }).click();
+	await page.locator('.text-center.dark\\:saturate-\\[60\\%\\].transition-colors.duration-50.submit-button').click();
+	await page.getByRole('button', { name: 'Filter by Proposal' }).click();
+	await page.getByRole('checkbox').check();
+	await page.getByRole('button', { name: 'Close modal', exact: true }).click();
+	await expect(page.getByText('#Lol')).toBeVisible();
+
 });
 
 test('Proposal-Spam-Test', async ({ page }) => {

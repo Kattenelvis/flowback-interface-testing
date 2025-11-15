@@ -91,7 +91,7 @@ export async function predictionStatementCreate(page: any, proposal = { title: "
     expect(await page.locator('#poll-timeline').filter({ hasText: 'Phase 3. Prediction statements creation' }))
     // if (await page.locator(`#${idfy(proposal.title)}-selection`).first().isVisible())
     await page.waitForTimeout(200);
-    const visible = await page.getByText('To make a consequence, please').isVisible()
+    const visible = await page.getByText('To make a consequence').isVisible()
     if (visible)
         await page.locator(`#${idfy(proposal.title)}-selection`).first().click();
 
