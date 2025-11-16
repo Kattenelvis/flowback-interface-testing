@@ -47,7 +47,7 @@ export async function loginEnter(page: any, {
 
 // Tests registring a user
 // Only works if PUBLIC_EMAIL_REGISTRATION=FALSE in .env
-// Email functionality appears to only be manually testable afaik 
+// TODO: Make automatic tests for email registration. Open source: https://www.npmjs.com/package/gmail-tester. Closed source: https://www.mailinator.com/ 
 export async function register(page: any) {
     const randomUsername = randomString();
     const randomEmail = `${randomUsername}@flowback.test`;
