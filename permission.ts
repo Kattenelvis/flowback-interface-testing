@@ -1,6 +1,6 @@
 import { expect } from "@playwright/test";
 import { gotoGroup } from "./group";
-import { idfy } from "$lib/Generic/GenericFunctions2";
+import { idfy } from "./generic";
 
 export async function createPermission(page: any, group = { name: 'Test Group', public: false }, permissions = [0], permission_name = "Test Permission") {
     try {

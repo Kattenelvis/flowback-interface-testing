@@ -1,4 +1,4 @@
-import { idfy } from '$lib/Generic/GenericFunctions2';
+import { idfy } from './generic';
 import { expect } from '@playwright/test';
 
 // Only works inside a poll

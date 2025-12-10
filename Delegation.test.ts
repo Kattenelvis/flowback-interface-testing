@@ -4,7 +4,7 @@ import { createPoll, createProposal, fastForward, goToPost, vote } from './poll'
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group';
 import { becomeDelegate } from './delegation';
 import { assignPermission, createPermission } from './permission';
-import { idfy } from '$lib/Generic/GenericFunctions2';
+import { idfy } from './generic';
 
 test('Become-Delegate', async ({ page }) => {
 	await login(page);
