@@ -17,7 +17,7 @@
   "homepage": "https://github.com/Kattenelvis/Flowback-Interface-Testing#readme",
   "devDependencies": {
     "@playwright/test": "^1.56.0",
-    "@types/node": "^24.7.2"
+    "@types/node": "^24.10.3"
   },
   "dependencies": {
     "dotenv": "^17.2.3"
