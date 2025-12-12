@@ -1,3 +1,4 @@
+import { idfy } from './generic';
 import { expect } from "@playwright/test";
 import { idfy } from './generic';
 

@@ -10,7 +10,7 @@ import {
 	results,
 	vote
 } from './poll';
-import { login, newWindow, randomString } from './generic';
+import { login, newWindow, randomString, idfy } from './generic';
 import { gotoGroup, createArea, createGroup, joinGroup } from './group';
 import { idfy } from './generic';
 import 'dotenv/config'

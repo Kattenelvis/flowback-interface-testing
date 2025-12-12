@@ -1,6 +1,13 @@
 {
-  "compilerOptions": {
-    "lib": ["es2015"],
-    "types": ["@playwright/test", "node"]
-  }
+    "extends": "../tsconfig.json",
+    "compilerOptions": {
+        "target": "es6",
+            "module": "nodenext",
+    "moduleResolution": "nodenext",
+        "types": [
+            "node",
+            "@playwright/test"
+        ]
+    }
+    
 }

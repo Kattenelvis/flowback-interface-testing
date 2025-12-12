@@ -6,6 +6,7 @@ import { becomeDelegate } from './delegation';
 import { idfy } from './generic';
 import 'dotenv/config'
 import { assignPermission, createPermission } from './permission';
+import { idfy } from './generic';
 
 test('Become-Delegate', async ({ page }) => {
 	await login(page);

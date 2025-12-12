@@ -46,8 +46,8 @@ export async function loginEnter(page: any, {
 }
 
 // Tests registring a user
-// Only works if PUBLIC_EMAIL_REGISTRATION=FALSE in .env
-// TODO: Make automatic tests for email registration. Open source: https://www.npmjs.com/package/gmail-tester. Closed source: https://www.mailinator.com/ 
+// Only works if PUBLIC_EMAIL_REGISTRATION=FALSE in .env in the flowback-backend repository
+// TODO: Automated Email testing
 export async function register(page: any) {
     const randomUsername = randomString();
     const randomEmail = `${randomUsername}@flowback.test`;
@@ -113,3 +113,7 @@ export function randomString() {
     const rand = Math.random().toString(36).slice(2, 10);
     return rand
 }
+
+export const idfy = (text: string) => {
+	return text.trim().replace(/\s+/g, '-').toLowerCase();
+};

@@ -1,0 +1,5 @@
+services:
+  flowback-testing:
+    build: .
+    restart: unless-stopped
+    command: npx playwright test . 

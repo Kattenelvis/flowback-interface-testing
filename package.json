@@ -1,25 +1,33 @@
 {
   "name": "flowback-interface-testing",
-  "version": "1.0.0",
-  "description": "Install playwright, and then run playwright commands, as found here: https://playwright.dev/docs/test-cli",
-  "main": "index.js",
-  "scripts": {},
+  "version": "0.0.1",
+  "description": "Playwright interface testing for Flowback",
+  "keywords": [
+    "testing",
+    "playwright",
+    "flowback",
+    "integration-tests",
+    "back-to-back-tests"
+  ],
+  "homepage": "https://github.com/kattenelvis/flowback-interface-testing#readme",
+  "bugs": {
+    "url": "https://github.com/kattenelvis/flowback-interface-testing/issues"
+  },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Kattenelvis/Flowback-Interface-Testing.git"
+    "url": "git+https://github.com/kattenelvis/flowback-interface-testing.git"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/Kattenelvis/Flowback-Interface-Testing/issues"
-  },
-  "homepage": "https://github.com/Kattenelvis/Flowback-Interface-Testing#readme",
-  "devDependencies": {
-    "@playwright/test": "^1.56.0",
-    "@types/node": "^24.7.2"
+  "license": "MIT",
+  "author": "emil",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "npx playwright test . --headed"
   },
   "dependencies": {
-    "dotenv": "^17.2.3"
+    "playwright": "^1.57.0"
+  },
+  "devDependencies": {
+    "@playwright": "^1.57.0"
   }
 }
