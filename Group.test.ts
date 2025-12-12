@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 import { login, newWindow } from './generic';
-import { createGroup, deleteGroup, gotoFirstGroup, gotoGroup, joinGroup } from './group';
+import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group';
 import { createPermission } from './permission';
 
 

@@ -42,8 +42,8 @@ export async function loginEnter(page: any, {
 }
 
 // Tests registring a user
-// Only works if PUBLIC_EMAIL_REGISTRATION=FALSE in .env
-// Email functionality appears to only be manually testable afaik 
+// Only works if PUBLIC_EMAIL_REGISTRATION=FALSE in .env in the flowback-backend repository
+// TODO: Automated Email testing
 export async function register(page: any) {
     const randomUSername = randomString();
     const randomEmail = `${randomUSername}@flowback.test`;
