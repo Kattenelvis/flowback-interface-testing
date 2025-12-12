@@ -59,6 +59,8 @@ test('Thread-Create-Report-Delete', async ({ page }) => {
 	await page.locator('.submit-button').nth(1).click();
 
 	//TODO Test images in comment
+	
+ await page.locator('#multiple-choices').getByRole('button').click();
 	await page.getByRole('button', { name: 'Report Thread' }).click();
 	await page.getByRole('textbox', { name: 'Title' }).click();
 	await page.getByRole('textbox', { name: 'Title' }).fill('Report Test');

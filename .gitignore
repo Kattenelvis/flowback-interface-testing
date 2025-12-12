@@ -1,5 +1,11 @@
-.env
 node_modules
 test-results
 package-lock.json
+.env
 .vscode
+
+# Playwright
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+/playwright/.auth/

@@ -1,7 +1,8 @@
 import test, { expect } from "@playwright/test";
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from "./group";
-import { login, newWindow } from "./generic";
+import { login, newWindow, randomString } from "./generic";
 import { assignPermission, createPermission } from "./permission";
+import 'dotenv/config'
 
 test('Create-Permission-Full', async ({ page }) => {
     await login(page);
@@ -13,15 +14,22 @@ test('Create-Permission-Full', async ({ page }) => {
     await expect(page.locator('#group-header-title')).toHaveText(group.name);
     await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click');
 
-    await createPermission(page, group, [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+    const permission_name = "No Permissions"
+
+    let perms = []
+    for (let i = 0; i < 17; i++) {
+        perms.push(i)
+    }
+    
+    await createPermission(page, group, perms, permission_name);
 
     const bPage = await newWindow();
 
-    await login(bPage, { email: 'b@b.se', password: 'b' });
+    await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS });
     await joinGroup(bPage, group);
     await page.waitForTimeout(400);
 
-    await assignPermission(page, group);
+    await assignPermission(page, group, permission_name, process.env.SECONDUSER_NAME);
 
     await page.waitForTimeout(300);
 
@@ -38,23 +46,23 @@ test('Create-Permission-Full', async ({ page }) => {
 test('Create-Permission-None', async ({ page }) => {
     await login(page);
 
-    const rand = Math.random().toString(36).slice(2, 10);
-    const group = { name: 'Test Group Permissions ' + rand, public: true };
+    const group = { name: 'Test Group Permissions ' + randomString(), public: true };
     await createGroup(page, group);
 
     await expect(page.locator('#group-header-title')).toHaveText(group.name);
 
     const bPage = await newWindow();
 
-    await login(bPage, { email: 'b@b.se', password: 'b' });
+    await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS });
     await joinGroup(bPage, group);
 
     await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click')
 
-    await createPermission(page, group, []);
+    const permission_name = "No Permissions"
+    await createPermission(page, group, [], permission_name);
 
     await page.waitForTimeout(1000);
-    await assignPermission(page, group)
+    await assignPermission(page, group, permission_name, process.env.SECONDUSER_NAME)
 
     await page.waitForTimeout(500);
     await gotoGroup(bPage, group);

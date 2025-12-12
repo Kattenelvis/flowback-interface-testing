@@ -12,8 +12,11 @@ import {
 } from './poll';
 import { login, newWindow, randomString, idfy } from './generic';
 import { gotoGroup, createArea, createGroup, joinGroup } from './group';
+import { idfy } from './generic';
+import 'dotenv/config'
 
 test.describe('Basic-Post-Integration-Tests', () => {
+	test.describe.configure({ mode: 'serial' })
 	const group = { name: 'Test Group Poll' + randomString(), public: false };
 	const poll = { title: 'Test Poll Create and Go ' + randomString(), date: false };
 
@@ -89,6 +92,18 @@ test('Proposal-Test', async ({ page }) => {
 	await fastForward(page, 1);
 
 	await createProposal(page, { title: 'Lol', description: 'Description funny' });
+
+	// Testing comment tagging and filtering system
+	// TODO: Expand this test
+	await page.getByPlaceholder('Write a comment...').click();
+	await page.getByPlaceholder('Write a comment...').fill('#');
+	await page.getByRole('button', { name: 'Lol' }).click();
+	await page.locator('.text-center.dark\\:saturate-\\[60\\%\\].transition-colors.duration-50.submit-button').click();
+	await page.getByRole('button', { name: 'Filter by Proposal' }).click();
+	await page.getByRole('checkbox').check();
+	await page.getByRole('button', { name: 'Close modal', exact: true }).click();
+	await expect(page.getByText('#Lol')).toBeVisible();
+
 });
 
 test('Proposal-Spam-Test', async ({ page }) => {
@@ -283,7 +298,7 @@ test('Prediction-Probabilities', async ({ page }) => {
 
 	const bPage = await newWindow();
 
-	await login(bPage, { email: 'b@b.se', password: 'b' });
+	await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS });
 
 	await joinGroup(bPage, group);
 
@@ -339,7 +354,7 @@ test('Prediction-Probabilities-2', async ({ page }) => {
 
 	const bPage = await newWindow();
 
-	await login(bPage, { email: 'b@b.se', password: 'b' });
+	await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS });
 
 	await joinGroup(bPage, group);
 

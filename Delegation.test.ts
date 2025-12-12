@@ -3,6 +3,8 @@ import { login, randomString } from './generic';
 import { createPoll, createProposal, fastForward, goToPost, vote } from './poll';
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group';
 import { becomeDelegate } from './delegation';
+import { idfy } from './generic';
+import 'dotenv/config'
 import { assignPermission, createPermission } from './permission';
 import { idfy } from './generic';
 
@@ -22,7 +24,7 @@ test('Become-Delegate', async ({ page }) => {
 test('Delegation-Poll', async ({ page }) => {
 	await login(page);
 
-	const group = { name: 'Test Group Delegation', public: true };
+	const group = { name: 'Test Group Delegation' + randomString(), public: true };
 
 	await createGroup(page, group);
 
@@ -34,12 +36,15 @@ test('Delegation-Poll', async ({ page }) => {
 	const bContext = await browser.newContext();
 	const bPage = await bContext.newPage();
 
-	await login(bPage, { email: 'b@b.se', password: 'b' });
+	await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS });
 	await joinGroup(bPage, group);
 
 	await page.waitForTimeout(1000);
-	await bPage.getByRole('link', { name: 'Delegations' }).click();
-	await bPage.locator('#delegate-group-select').selectOption({ label: group.name });
+	await bPage.getByRole('button', { name: 'Delegations' }).click();
+	// await bPage.locator('#delegate-group-select').selectOption({ label: group.name });
+	await bPage.getByRole('textbox', { name: '0/' }).click();
+	await bPage.getByRole('textbox', { name: '0/' }).fill(group.name);
+
 	await page.waitForTimeout(1000);
 	await bPage.getByRole('button', { name: 'Uncategorised' }).click();
 	await page.waitForTimeout(1000);
@@ -49,8 +54,9 @@ test('Delegation-Poll', async ({ page }) => {
 	await gotoGroup(page, group);
 	await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click');
 	//Give b voting rights
-	// await createPermission(page, group, [2]);
-	// await assignPermission(page, group, "Test Permission", "bb");
+	const permission_name = "Test Permission" + randomString();
+	await createPermission(page, group, [2], permission_name);
+	await assignPermission(page, group, permission_name, process.env.SECONDUSER_NAME);
 
 	await gotoGroup(page, group);
 

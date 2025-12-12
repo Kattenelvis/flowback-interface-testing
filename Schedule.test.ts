@@ -4,7 +4,7 @@ import { login } from './generic';
 test('Create-Delete-Schedule-Event', async ({ page }) => {
     await login(page);
 
-    await page.getByRole('link', { name: 'Schedule' }).click();
+    await page.getByRole('button', { name: 'Schedule' }).click();
     await page.getByRole('button', { name: '15' }).dblclick();
     await page.getByLabel('Title').fill('Event at 15:th');
     await page.getByLabel('Description').fill('This is a test event at 15:th');
@@ -31,8 +31,6 @@ test('Create-Delete-Schedule-Event', async ({ page }) => {
     await page.getByLabel('End Date').press('Shift+Tab');
     await page.getByLabel('End Date').fill('2027-08-16T00:01');
     await page.getByRole('button', { name: 'Update', exact: true }).click();
-    await page.getByRole('button', { name: 'Cancel', exact: true }).click();
-    
     await page.getByRole('button', { name: 'Delete', exact: true }).click();
     await expect(page.getByText('Event deleted')).toBeVisible();
     await expect(page.getByText('Failed to update event')).toBeHidden();

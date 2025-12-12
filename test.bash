@@ -1,0 +1,1 @@
+npx playwright test . --workers=2 --project=chromium --retries=2

@@ -1,5 +1,7 @@
 import { idfy } from './generic';
 import { expect } from '@playwright/test';
+import { idfy } from './generic';
+
 
 // Only works inside a poll
 export async function fastForward(page: any, times = 1) {
@@ -21,9 +23,9 @@ export async function createPoll(page: any, {
     await page.getByRole('button', { name: 'Create a post' }).click();
     await page.waitForTimeout(300);
     expect(await page.getByText('PollThread')).toBeVisible();
-    await page.getByLabel('Title * 0/').click();
-    await page.getByLabel('Title * 0/').fill(title);
-    await page.getByLabel('Description  0/').fill('Test Description');
+    await page.getByLabel('Title').click();
+    await page.getByLabel('Title').fill(title);
+    await page.getByLabel('Description').fill('Test Description');
 
     if (date) await page.getByLabel('Date Poll').check();
 
@@ -34,8 +36,8 @@ export async function createPoll(page: any, {
     await page.getByRole('spinbutton').fill(phase_time.toString());
 
     await page.getByRole('button', { name: 'Post' }).click();
-    await expect(page.getByText('Could not create Poll')).not.toBeVisible();
     await expect(page.getByText('Poll Created')).toBeVisible();
+    await expect(page.getByText('Could not create Poll')).not.toBeVisible();
 
     await page.waitForTimeout(500);
     expect(await page.getByRole('heading', { name: title })).toBeVisible();
@@ -44,12 +46,12 @@ export async function createPoll(page: any, {
 export async function goToPost(page: any, {
     title = 'Test Poll'
 }) {
-    await page.getByRole('link', { name: 'Home' }).click();
+    await page.getByRole('button', { name: 'Home' }).click();
     await page.getByPlaceholder('Search polls').click();
     await page.getByPlaceholder('Search polls').fill(title);
-    expect(await page.locator('#thumbnails > div').getByRole('link', { name: title, exact: true }).first()).toBeVisible();
+    await expect(await page.locator('#thumbnails > div').getByRole('link', { name: title, exact: true }).first()).toBeVisible();
     await page.locator('#thumbnails > div').getByRole('link', { name: title, exact: true }).first().click();
-    expect(await page.getByRole('heading', { name: title })).toBeVisible();
+    await expect(await page.getByRole('heading', { name: title })).toBeVisible();
 
     // expect(await page.locator('#poll-thumbnail-140').getByRole('link', { name: 'Test Poll' })).toBeVisible();
 }
@@ -83,14 +85,14 @@ export async function createProposal(page: any, {
     await page.getByLabel('Description  0/').click();
     await page.getByLabel('Description  0/').fill(description);
     await page.getByRole('button', { name: 'Confirm' }).click();
-    expect(await page.getByText('Successfully added proposal').first()).toBeVisible();
+    await expect(await page.getByText('Successfully added proposal').first()).toBeVisible();
 }
 
 export async function predictionStatementCreate(page: any, proposal = { title: "Proposal Title" }, prediction = { title: "Prediction Title" }) {
     expect(await page.locator('#poll-timeline').filter({ hasText: 'Phase 3. Prediction statements creation' }))
     // if (await page.locator(`#${idfy(proposal.title)}-selection`).first().isVisible())
     await page.waitForTimeout(200);
-    const visible = await page.getByText('To make a consequence, please').isVisible()
+    const visible = await page.getByText('To make a consequence').isVisible()
     if (visible)
         await page.locator(`#${idfy(proposal.title)}-selection`).first().click();
 
@@ -141,10 +143,10 @@ export async function vote(page: any, proposal = { title: "Proposal Title", vote
 
 export async function results(page: any) {
     expect(await page.locator('#poll-timeline').filter({ hasText: 'Current: Phase 7. Results and' }))
-    expect(await page.getByText('Results', { exact: true })).toBeVisible();
+    await expect(await page.getByText('Results', { exact: true })).toBeVisible();
 
     //TODO: no need for canvas when there have been 0 votes
-    expect(await page.locator('canvas')).toBeVisible();
+    await expect(await page.locator('canvas')).toBeVisible();
 
     await page.locator('canvas').click({
         position: {

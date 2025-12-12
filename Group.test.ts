@@ -1,11 +1,19 @@
 import { test, expect } from '@playwright/test';
-import { login, newWindow } from './generic';
-import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group';
+import { idfy, login, newWindow, randomString } from './generic';
+import { createGroup, deleteGroup, gotoFirstGroup, gotoGroup, joinGroup } from './group';
 import { createPermission } from './permission';
 
+// TODO: Add test for this situation:
+// User a creates a group which is invite only
+// User b asks to join
+// User a accepts b's request to join
+// User b leaves the group
+// User b asks to join again
+// User a tries to reject, but it says error 400, "User already joined"
 
 test.describe('Group-Integration-Tests', () => {
-    const group = { name: "Test Group Group-Testing Public", public: true, invite: false }
+    test.describe.configure({ mode: 'serial' });
+    const group = { name: "Test Group Group-Testing Public" + randomString(), public: true, invite: false }
 
     test('Create Group', async ({ page }) => {
         await login(page)
@@ -18,12 +26,12 @@ test.describe('Group-Integration-Tests', () => {
     })
 
     test('Join Group', async ({ page }) => {
-        await login(page, { email: "b@b.se", password: "b" })
+        await login(page, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS, })
         await joinGroup(page, group)
     })
 
     test('Leave Group', async ({ page }) => {
-        await login(page, { email: "b@b.se", password: "b" })
+        await login(page, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS, })
         await gotoGroup(page, group)
         await page.getByRole('button', { name: 'Leave group' }).click();
         await page.getByRole('button', { name: 'Yes', exact: true }).click();
@@ -37,7 +45,8 @@ test.describe('Group-Integration-Tests', () => {
 });
 
 test.describe('Create-Delete-Group Invite only', () => {
-    const groupInvite = { name: "Test Group Group-Testing Invite only", public: true, invite: true }
+    test.describe.configure({ mode: 'serial' });
+    const groupInvite = { name: "Test Group Group-Testing Invite only" + randomString(), public: true, invite: true }
 
     test('Create Group Invite', async ({ page }) => {
         await login(page)
@@ -52,7 +61,7 @@ test.describe('Create-Delete-Group Invite only', () => {
     test('Ask to Join Group Invite', async ({ page }) => {
         await login(page)
         const bPage = await newWindow()
-        await login(bPage, { email: "b@b.se", password: "b" })
+        await login(bPage, { email: process.env.SECONDUSER_MAIL, password: "b" })
         await joinGroup(bPage, groupInvite)
 
         await gotoGroup(page, groupInvite)
@@ -64,7 +73,7 @@ test.describe('Create-Delete-Group Invite only', () => {
 
     test('Leave Group Invite', async ({ page }) => {
         const bPage = await newWindow()
-        await login(bPage, { email: "b@b.se", password: "b" })
+        await login(bPage, { email: process.env.SECONDUSER_MAIL, password: "b" })
         await gotoGroup(bPage, groupInvite)
         await bPage.getByRole('button', { name: 'Leave group' }).click();
         await bPage.getByRole('button', { name: 'Yes', exact: true }).click();
@@ -77,11 +86,37 @@ test.describe('Create-Delete-Group Invite only', () => {
     })
 });
 
+test('Group-Invite', async ({ page }) => {
+    const group = { name: "Invitation " + randomString() }
+    await login(page);
+    await createGroup(page, group)
+    await page.getByRole('button', { name: 'Members', exact: true }).click();
+    await page.getByRole('button', { name: 'avatar + Invite user' }).click();
+    await page.getByRole('textbox', { name: 'User to invite' }).click();
+    await page.getByRole('textbox', { name: 'User to invite' }).fill(process.env.SECONDUSER_NAME);
+    await page.getByRole('listitem').getByRole('button').filter({ hasText: /^$/ }).click();
+    await expect(page.getByText('Successfully sent invite')).toBeVisible();
+
+    const bPage = await newWindow();
+    await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS })
+    await bPage.getByText(`You have been invited to ${group.name} Accept Reject`).getByText('Reject').click();
+
+    await page.getByRole('textbox', { name: 'User to invite' }).click();
+    await page.getByRole('textbox', { name: 'User to invite' }).fill(process.env.SECONDUSER_NAME);
+
+    await page.getByRole('listitem').getByRole('button').filter({ hasText: /^$/ }).click();
+    await expect(page.getByText('Successfully sent invite')).toBeVisible();
+
+    await bPage.reload();
+    await bPage.getByText(`You have been invited to ${group.name} Accept Reject`).getByText('Accept').click();
+
+    await gotoGroup(bPage, group);
+})
+
 test('Create-Delete-Group', async ({ page }) => {
     await login(page);
 
-    const rand = Math.random().toString(36).slice(2, 10);
-    const group = { name: 'Test Group Group-Test-' + rand, public: false };
+    const group = { name: 'Test Group Group-Test-' + randomString(), public: false };
     await createGroup(page, group);
 
     // Attempting to leave group as owner 
@@ -93,14 +128,14 @@ test('Create-Delete-Group', async ({ page }) => {
     // Workgroup testing
     await page.getByRole('button', { name: 'Work Groups' }).click();
     await page.getByRole('button', { name: '+ Add Workgroup' }).click();
-    await page.getByLabel('Name * 0/').click();
-    await page.getByLabel('Name * 0/').fill('Test Workgroup directjoin');
+    await page.getByLabel('Name').click();
+    await page.getByLabel('Name').fill('Test Workgroup directjoin');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
     await page.getByRole('button', { name: 'Join', exact: true }).click();
     await page.getByRole('button', { name: '+ Add Workgroup' }).click();
     await page.getByLabel('No').check();
-    await page.getByLabel('Name * 0/').click();
-    await page.getByLabel('Name * 0/').fill('Test group invite only');
+    await page.getByLabel('Name').click();
+    await page.getByLabel('Name').fill('Test group invite only');
     await page.getByRole('button', { name: 'Create', exact: true }).click();
     await page.getByRole('button', { name: 'Ask to join' }).click();
     await expect(page.getByText('Pending')).toBeVisible();
@@ -127,12 +162,12 @@ test('Create-Delete-Group', async ({ page }) => {
     await page.getByRole('button', { name: 'Delete', exact: true }).nth(1).click();
     // Create, deactive and delete area
     await page.getByRole('button', { name: 'Areas' }).click();
-    await page.getByLabel('Tag * 0/').click();
-    await page.getByLabel('Tag * 0/').fill('Test Tag');
-    await page.getByLabel('Description  0/').click();
-    await page.getByLabel('Description  0/').fill('Test tag description');
+    await page.getByLabel('Tag').click();
+    await page.getByLabel('Tag').fill('Test Tag');
+    await page.getByLabel('Description').click();
+    await page.getByLabel('Description').fill('Test tag description');
     await page.getByRole('button', { name: 'Add' }).click();
-    await expect(page.locator('div:nth-child(3) > div').first()).toHaveText('Test Tag');
+    await expect(page.locator(`#test-tag`).first()).toHaveText('Test Tag');
     await page.locator('.slider').first().click();
     await page.locator('.text-red-500').first().click();
     await page.getByRole('button', { name: 'No', exact: true }).click();
