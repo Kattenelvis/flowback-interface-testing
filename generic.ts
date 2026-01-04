@@ -1,119 +1,114 @@
-import { chromium, expect } from '@playwright/test';
+import { chromium, expect } from '@playwright/test'
 import 'dotenv/config'
 
 export const idfy = (text: string) => {
-    return text.trim().replace(/\s+/g, '-').toLowerCase();
+    return text.trim().replace(/\s+/g, '-').toLowerCase()
 }
 
 export async function newWindow() {
-    const browser = await chromium.launch();
-    const Context = await browser.newContext();
-    const Page = await Context.newPage();
+    const browser = await chromium.launch()
+    const Context = await browser.newContext()
+    const Page = await Context.newPage()
     return Page
 }
 
-export async function login(page: any, {
-    email = process.env.MAINUSER_MAIL ?? 'a@a.se',
-    password = process.env.MAINUSER_PASS ?? 'a',
-} = {}) {
-    await page.goto(`${process.env.LINK}/login`);
-    await expect(page.locator('#login-page')).toBeVisible();
-    await page.waitForTimeout(700);
+export async function login(
+    page: any,
+    { email = process.env.MAINUSER_MAIL ?? 'a@a.se', password = process.env.MAINUSER_PASS ?? 'a' } = {},
+) {
+    await page.goto(`${process.env.LINK}/login`)
+    await expect(page.locator('#login-page')).toBeVisible()
+    await page.waitForTimeout(700)
 
-    await page.fill('input[name="email"]', email);
-    await page.fill('input[name="password"]', password);
-    await page.click('button[type="submit"]');
+    await page.fill('input[name="email"]', email)
+    await page.fill('input[name="password"]', password)
+    await page.click('button[type="submit"]')
 
-    await expect(page).toHaveURL(`${process.env.LINK}/home`);
+    await expect(page).toHaveURL(`${process.env.LINK}/home`)
     if (await page.getByRole('button', { name: 'Ok', exact: true }).isVisible()) {
-        await page.getByRole('button', { name: 'Ok', exact: true }).click();
+        await page.getByRole('button', { name: 'Ok', exact: true }).click()
     }
 }
 
-export async function loginEnter(page: any, {
-    email = process.env.MAINUSER_MAIL ?? 'a@a.se',
-    password = process.env.MAINUSER_PASS ?? 'a',
-} = {}) {
-    await page.goto(`${process.env.LINK}/login`);
-    await expect(page.locator('#login-page')).toBeVisible();
-    await page.waitForTimeout(700);
+export async function loginEnter(
+    page: any,
+    { email = process.env.MAINUSER_MAIL ?? 'a@a.se', password = process.env.MAINUSER_PASS ?? 'a' } = {},
+) {
+    await page.goto(`${process.env.LINK}/login`)
+    await expect(page.locator('#login-page')).toBeVisible()
+    await page.waitForTimeout(700)
 
-    await page.fill('input[name="email"]', email);
-    await page.fill('input[name="password"]', password);
-    await page.getByLabel('Password').press('Enter');
+    await page.fill('input[name="email"]', email)
+    await page.fill('input[name="password"]', password)
+    await page.getByLabel('Password').press('Enter')
 
-    await expect(page).toHaveURL(`${process.env.LINK}/home`);
+    await expect(page).toHaveURL(`${process.env.LINK}/home`)
 }
 
 // Tests registring a user
 // Only works if PUBLIC_EMAIL_REGISTRATION=FALSE in .env in the flowback-backend repository
 // TODO: Automated Email testing
 export async function register(page: any) {
-    const randomUsername = randomString();
-    const randomEmail = `${randomUsername}@flowback.test`;
+    const randomUsername = randomString()
+    const randomEmail = `${randomUsername}@flowback.test`
 
-    await page.goto(`${process.env.LINK}/login`);
-    await expect(page.locator('#login-page')).toBeVisible();
-    await page.waitForTimeout(500);
+    await page.goto(`${process.env.LINK}/login`)
+    await expect(page.locator('#login-page')).toBeVisible()
+    await page.waitForTimeout(500)
 
-    await page.getByRole('button', { name: 'Register' }).click();
-    await page.getByLabel('Email').click();
-    await page.getByLabel('Email').fill('a@a.se');
-    await page.getByRole('button', { name: 'Send' }).click();
-    await expect(page.getByText('You must accept terms of')).toBeVisible();
-    await page.getByLabel('Yes').check();
-    await page.getByRole('button', { name: 'Send' }).click();
-    await expect(page.getByText('Email already exists.')).toBeVisible();
+    await page.getByRole('button', { name: 'Register' }).click()
+    await page.getByLabel('Email').click()
+    await page.getByLabel('Email').fill('a@a.se')
+    await page.getByRole('button', { name: 'Send' }).click()
+    await expect(page.getByText('You must accept terms of')).toBeVisible()
+    await page.getByLabel('Yes').check()
+    await page.getByRole('button', { name: 'Send' }).click()
+    await expect(page.getByText('Email already exists.')).toBeVisible()
 
-    await page.getByLabel('Email').fill(randomEmail);
+    await page.getByLabel('Email').fill(randomEmail)
 
-    let registrationCode = '';
+    let registrationCode = ''
     await page.on('response', async (response: any) => {
         if (response.url().includes('register') && !response.url().includes('verify')) {
             registrationCode = await response.text()
         }
-    });
+    })
 
-    await page.getByRole('button', { name: 'Send' }).click();
-    await expect(page.getByText('Email Sent')).toBeVisible();
-    await expect(page.getByText('Mail Sent')).toBeVisible();
+    await page.getByRole('button', { name: 'Send' }).click()
+    await expect(page.getByText('Email Sent')).toBeVisible()
+    await expect(page.getByText('Mail Sent')).toBeVisible()
 
-    await page.getByLabel('Verification Code').click();
-    await page.getByLabel('Verification Code').fill('geageageadgea');
-    await page.getByLabel('Username').click();
-    await page.getByLabel('Username').fill(randomUsername);
-    await page.getByLabel('Choose a Password').click();
-    await page.getByLabel('Choose a Password').fill('SecretPassword123123!');
-    await page.getByRole('button', { name: 'Send' }).click();
-    await expect(page.getByText('Wrong verification code')).toBeVisible();
-    await page.getByLabel('Verification Code').click();
-    await page.getByLabel('Verification Code').press('Control+a');
-    await page.getByLabel('Verification Code').fill(registrationCode.replace("\"", "").replace("\"", ""));
+    await page.getByLabel('Verification Code').click()
+    await page.getByLabel('Verification Code').fill('geageageadgea')
+    await page.getByLabel('Username').click()
+    await page.getByLabel('Username').fill(randomUsername)
+    await page.getByLabel('Choose a Password').click()
+    await page.getByLabel('Choose a Password').fill('SecretPassword123123!')
+    await page.getByRole('button', { name: 'Send' }).click()
+    await expect(page.getByText('Wrong verification code')).toBeVisible()
+    await page.getByLabel('Verification Code').click()
+    await page.getByLabel('Verification Code').press('Control+a')
+    await page.getByLabel('Verification Code').fill(registrationCode.replace('"', '').replace('"', ''))
 
-    await page.getByRole('button', { name: 'Send' }).click();
+    await page.getByRole('button', { name: 'Send' }).click()
 
-    await expect(page.getByText('Success')).toBeVisible();
-    await expect(page).toHaveURL(`${process.env.LINK}/home`);
+    await expect(page.getByText('Success')).toBeVisible()
+    await expect(page).toHaveURL(`${process.env.LINK}/home`)
 
     if (await page.getByRole('button', { name: 'Ok' }).isVisible()) {
-        await page.getByRole('button', { name: 'Ok' }).click();
+        await page.getByRole('button', { name: 'Ok' }).click()
     }
 
-    return { username: randomUsername, email: randomEmail, password: 'SecretPassword123123!' };
+    return { username: randomUsername, email: randomEmail, password: 'SecretPassword123123!' }
 }
 
 export async function logout(page: any) {
-    await page.getByRole('button', { name: 'default pfp' }).click();
-    await page.getByRole('button', { name: 'Log Out', exact: true }).click();
-    await expect(page.getByRole('img', { name: 'flowback logo' })).toBeVisible();
-};
-
-
-export function randomString() {
-    const rand = Math.random().toString(36).slice(2, 10);
-    return rand
+    await page.getByRole('button', { name: 'default pfp' }).click()
+    await page.getByRole('button', { name: 'Log Out', exact: true }).click()
+    await expect(page.getByRole('img', { name: 'flowback logo' })).toBeVisible()
 }
 
-export const idfy = (text: string) => {
-	return text.trim().replace(/\s+/g, '-').toLowerCase();
-};
+export function randomString() {
+    const rand = Math.random().toString(36).slice(2, 10)
+    return rand
+}
