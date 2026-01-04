@@ -1,33 +1,35 @@
 {
-  "name": "flowback-interface-testing",
-  "version": "0.0.1",
-  "description": "Playwright interface testing for Flowback",
-  "keywords": [
-    "testing",
-    "playwright",
-    "flowback",
-    "integration-tests",
-    "back-to-back-tests"
-  ],
-  "homepage": "https://github.com/kattenelvis/flowback-interface-testing#readme",
-  "bugs": {
-    "url": "https://github.com/kattenelvis/flowback-interface-testing/issues"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/kattenelvis/flowback-interface-testing.git"
-  },
-  "license": "MIT",
-  "author": "emil",
-  "type": "commonjs",
-  "main": "index.js",
-  "scripts": {
-    "test": "npx playwright test . --headed"
-  },
-  "dependencies": {
-    "playwright": "^1.57.0"
-  },
-  "devDependencies": {
-    "@playwright": "^1.57.0"
-  }
+    "name": "flowback-interface-testing",
+    "version": "0.0.1",
+    "description": "Playwright interface testing for Flowback",
+    "keywords": [
+        "testing",
+        "playwright",
+        "flowback",
+        "integration-tests",
+        "back-to-back-tests"
+    ],
+    "homepage": "https://github.com/kattenelvis/flowback-interface-testing#readme",
+    "bugs": {
+        "url": "https://github.com/kattenelvis/flowback-interface-testing/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/kattenelvis/flowback-interface-testing.git"
+    },
+    "license": "MIT",
+    "author": "emil",
+    "type": "commonjs",
+    "main": "index.js",
+    "scripts": {
+        "test": "npx playwright test . --headed"
+    },
+    "dependencies": {
+        "playwright": "^1.57.0"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.57.0",
+        "@types/node": "^25.0.3",
+        "prettier": "^3.7.4"
+    }
 }

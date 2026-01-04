@@ -1,4 +1,7 @@
 {
-  "tabWidth": 2,
-  "useTabs": false
+    "tabWidth": 4,
+    "singleQuote": true,
+    "indentStyle": "tab",
+    "printWidth": 120,
+    "semi": false
 }
