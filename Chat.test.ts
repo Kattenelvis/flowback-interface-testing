@@ -231,4 +231,3 @@ test('Group-Chat-Creation', async ({ page }) => {
     await expect(cPage.getByText('Hello!! :D').nth(2)).toBeVisible()
     await expect(cPage.getByText('Hello!! :D').nth(3)).toBeVisible()
 })
-

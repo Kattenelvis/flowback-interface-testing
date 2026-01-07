@@ -43,6 +43,7 @@ export async function goToPost(page: any, { title = 'Test Poll' }) {
     await page.getByRole('button', { name: 'Home' }).click()
     await page.getByPlaceholder('Search polls').click()
     await page.getByPlaceholder('Search polls').fill(title)
+
     await expect(
         await page.locator('#thumbnails > div').getByRole('link', { name: title, exact: true }).first(),
     ).toBeVisible()
@@ -164,4 +165,3 @@ export async function results(page: any) {
         },
     })
 }
-

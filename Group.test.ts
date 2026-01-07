@@ -176,4 +176,3 @@ test('Create-Delete-Group', async ({ page }) => {
 
     await deleteGroup(page, group)
 })
-

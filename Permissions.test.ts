@@ -1,74 +1,74 @@
-import test, { expect } from "@playwright/test";
-import { createGroup, deleteGroup, gotoGroup, joinGroup } from "./group";
-import { login, newWindow, randomString } from "./generic";
-import { assignPermission, createPermission } from "./permission";
+import test, { expect } from '@playwright/test'
+import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group'
+import { login, newWindow, randomString } from './generic'
+import { assignPermission, createPermission } from './permission'
 import 'dotenv/config'
 
 test('Create-Permission-Full', async ({ page }) => {
-    await login(page);
+    await login(page)
 
-    const rand = Math.random().toString(36).slice(2, 10);
-    const group = { name: 'Test Group Permissions ' + rand, public: true };
-    await createGroup(page, group);
+    const rand = Math.random().toString(36).slice(2, 10)
+    const group = { name: 'Test Group Permissions ' + rand, public: true }
+    await createGroup(page, group)
 
-    await expect(page.locator('#group-header-title')).toHaveText(group.name);
-    await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click');
+    await expect(page.locator('#group-header-title')).toHaveText(group.name)
+    await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click')
 
-    const permission_name = "No Permissions"
+    const permission_name = 'No Permissions'
 
     let perms = []
     for (let i = 0; i < 17; i++) {
         perms.push(i)
     }
-    
-    await createPermission(page, group, perms, permission_name);
 
-    const bPage = await newWindow();
+    await createPermission(page, group, perms, permission_name)
 
-    await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS });
-    await joinGroup(bPage, group);
-    await page.waitForTimeout(400);
+    const bPage = await newWindow()
 
-    await assignPermission(page, group, permission_name, process.env.SECONDUSER_NAME);
+    await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS })
+    await joinGroup(bPage, group)
+    await page.waitForTimeout(400)
 
-    await page.waitForTimeout(300);
+    await assignPermission(page, group, permission_name, process.env.SECONDUSER_NAME)
 
-    await gotoGroup(bPage, group);
-    await bPage.locator('#create-a-post-sidebar-button').waitFor();
+    await page.waitForTimeout(300)
+
+    await gotoGroup(bPage, group)
+    await bPage.locator('#create-a-post-sidebar-button').waitFor()
     expect(await bPage.locator('#create-a-post-sidebar-button').isDisabled()).not
 
     // await expect(bPage.locator('#create-a-post-sidebar-button').isDisabled())
 
-    await deleteGroup(page, group);
-
-});
+    await deleteGroup(page, group)
+})
 
 test('Create-Permission-None', async ({ page }) => {
-    await login(page);
+    await login(page)
 
-    const group = { name: 'Test Group Permissions ' + randomString(), public: true };
-    await createGroup(page, group);
+    const group = { name: 'Test Group Permissions ' + randomString(), public: true }
+    await createGroup(page, group)
 
-    await expect(page.locator('#group-header-title')).toHaveText(group.name);
+    await expect(page.locator('#group-header-title')).toHaveText(group.name)
 
-    const bPage = await newWindow();
+    const bPage = await newWindow()
 
-    await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS });
-    await joinGroup(bPage, group);
+    await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS })
+    await joinGroup(bPage, group)
 
     await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click')
 
-    const permission_name = "No Permissions"
-    await createPermission(page, group, [], permission_name);
+    const permission_name = 'No Permissions'
+    await createPermission(page, group, [], permission_name)
 
-    await page.waitForTimeout(1000);
+    await page.waitForTimeout(1000)
     await assignPermission(page, group, permission_name, process.env.SECONDUSER_NAME)
 
-    await page.waitForTimeout(500);
-    await gotoGroup(bPage, group);
+    await page.waitForTimeout(500)
+    await gotoGroup(bPage, group)
 
-    await bPage.locator('#create-a-post-sidebar-button').waitFor();
-    await expect(bPage.locator('#create-a-post-sidebar-button').isDisabled()).toBeTruthy();
+    await bPage.locator('#create-a-post-sidebar-button').waitFor()
+    await expect(bPage.locator('#create-a-post-sidebar-button').isDisabled()).toBeTruthy()
 
-    await deleteGroup(page, group);
-});
+    await deleteGroup(page, group)
+})
+
