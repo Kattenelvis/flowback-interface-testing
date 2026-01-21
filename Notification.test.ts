@@ -37,7 +37,7 @@ test('Group-Notification', async ({ page }) => {
     await expect(bPage.getByRole('button', { name: 'A new poll has been posted' }).nth(1)).toBeVisible()
 })
 
-test('Poll-Start-To-Finish', async ({ page }) => {
+test('Poll-Start-To-Finish-Notification', async ({ page }) => {
     await login(page)
 
     const bPage = await newWindow()
