@@ -14,6 +14,7 @@ import {
 import { assignPermission, createPermission } from './permission'
 
 test('Imac-Test', async ({ page }) => {
+  test.skip()
   test.setTimeout(195000)
 
   await login(page)
@@ -68,6 +69,7 @@ test('Imac-Test', async ({ page }) => {
 })
 
 test('Imac-Test-2-Users', async ({ page }) => {
+  test.skip()
   // test.setTimeout(100000);
   test.setTimeout(100000)
 

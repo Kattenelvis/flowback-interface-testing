@@ -83,7 +83,7 @@ export async function register(page: any) {
   await page.getByLabel('Username').click()
   await page.getByLabel('Username').fill(randomUsername)
   await page.getByLabel('Choose a Password').click()
-  await page.getByLabel('Choose a Password').fill('SecretPassword123123!')
+  await page.getByLabel('Choose a Password').fill(process.env.TEST_PASS)
   await page.getByRole('button', { name: 'Send' }).click()
   await expect(page.getByText('Wrong verification code')).toBeVisible()
   await page.getByLabel('Verification Code').click()
@@ -99,11 +99,11 @@ export async function register(page: any) {
     await page.getByRole('button', { name: 'Ok' }).click()
   }
 
-  return { username: randomUsername, email: randomEmail, password: 'SecretPassword123123!' }
+  return { username: randomUsername, email: randomEmail, password: process.env.TEST_PASS }
 }
 
 export async function logout(page: any) {
-  await page.getByRole('button', { name: 'default pfp' }).click()
+  await page.locator("#side-header-icon").click()
   await page.getByRole('button', { name: 'Log Out', exact: true }).click()
   await expect(page.getByRole('img', { name: 'flowback logo' })).toBeVisible()
 }
