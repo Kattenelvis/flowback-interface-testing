@@ -82,7 +82,7 @@ test('Imac-Test-2-Users', async ({ page }) => {
 
   const bPage = await newWindow()
 
-  await login(bPage, { email: process.env.SECONDUSER_MAIL, password: 'b' })
+  await login(bPage, { username: process.env.SECONDUSER_NAME, password: 'b' })
   await joinGroup(bPage, group)
 
   const permission_name = 'Consequence voting ' + randomString()

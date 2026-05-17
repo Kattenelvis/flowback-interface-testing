@@ -35,7 +35,7 @@ test('Delegation-Poll', async ({ page }) => {
   const bContext = await browser.newContext()
   const bPage = await bContext.newPage()
 
-  await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS })
+  await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
   await joinGroup(bPage, group)
 
   await page.waitForTimeout(1000)

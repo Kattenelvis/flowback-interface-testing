@@ -26,12 +26,12 @@ test.describe('Group-Integration-Tests', () => {
     })
 
     test('Join Group', async ({ page }) => {
-        await login(page, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS })
+        await login(page, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
         await joinGroup(page, group)
     })
 
     test('Leave Group', async ({ page }) => {
-        await login(page, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS })
+        await login(page, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
         await gotoGroup(page, group)
         await page.getByRole('button', { name: 'Leave group' }).click()
         await page.getByRole('button', { name: 'Yes', exact: true }).click()
@@ -61,7 +61,7 @@ test.describe('Create-Delete-Group Invite only', () => {
     test('Ask to Join Group Invite', async ({ page }) => {
         await login(page)
         const bPage = await newWindow()
-        await login(bPage, { email: process.env.SECONDUSER_MAIL, password: 'b' })
+        await login(bPage, { username: process.env.SECONDUSER_NAME, password: 'b' })
         await joinGroup(bPage, groupInvite)
 
         await gotoGroup(page, groupInvite)
@@ -73,7 +73,7 @@ test.describe('Create-Delete-Group Invite only', () => {
 
     test('Leave Group Invite', async ({ page }) => {
         const bPage = await newWindow()
-        await login(bPage, { email: process.env.SECONDUSER_MAIL, password: 'b' })
+        await login(bPage, { username: process.env.SECONDUSER_NAME, password: 'b' })
         await gotoGroup(bPage, groupInvite)
         await bPage.getByRole('button', { name: 'Leave group' }).click()
         await bPage.getByRole('button', { name: 'Yes', exact: true }).click()
@@ -98,7 +98,7 @@ test('Group-Invite', async ({ page }) => {
     await expect(page.getByText('Successfully sent invite')).toBeVisible()
 
     const bPage = await newWindow()
-    await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS })
+    await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
     await bPage.getByText(`You have been invited to ${group.name} Accept Reject`).getByText('Reject').click()
 
     await page.getByRole('textbox', { name: 'User to invite' }).click()

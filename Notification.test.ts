@@ -11,7 +11,7 @@ test('Group-Notification', async ({ page }) => {
     await createGroup(page, group)
 
     const bPage = await newWindow()
-    await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS })
+    await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
 
     await joinGroup(bPage, group)
     await gotoGroup(bPage, group)
@@ -41,7 +41,7 @@ test('Poll-Start-To-Finish-Notification', async ({ page }) => {
     await login(page)
 
     const bPage = await newWindow()
-    await login(bPage, { email: env.SECONDUSER_MAIL, password: env.SECONDUSER_PASS })
+    await login(bPage, { username: env.SECONDUSER_NAME, password: env.SECONDUSER_PASS })
 
     const group = { name: 'Test Poll start to finish notifications' + randomString(), public: true }
     await createGroup(page, group)

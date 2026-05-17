@@ -296,7 +296,7 @@ test('Prediction-Probabilities', async ({ page }) => {
 
   const bPage = await newWindow()
 
-  await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS })
+  await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
 
   await joinGroup(bPage, group)
 
@@ -352,7 +352,7 @@ test('Prediction-Probabilities-2', async ({ page }) => {
 
   const bPage = await newWindow()
 
-  await login(bPage, { email: process.env.SECONDUSER_MAIL, password: process.env.SECONDUSER_PASS })
+  await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
 
   await joinGroup(bPage, group)
 

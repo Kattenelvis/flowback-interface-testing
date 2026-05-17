@@ -12,7 +12,7 @@ test('Group-Chat', async ({ page }) => {
 
   const bPage = await newWindow()
   await login(bPage, {
-    email: process.env.SECONDUSER_MAIL,
+    username: process.env.SECONDUSER_NAME,
     password: process.env.SECONDUSER_PASS,
   })
   await joinGroup(bPage, group)
@@ -66,7 +66,7 @@ test('Direct-Chat-Via-Group', async ({ page }) => {
   const bPage = await bContext.newPage()
 
   await login(bPage, {
-    email: process.env.SECONDUSER_MAIL,
+    username: process.env.SECONDUSER_NAME,
     password: process.env.SECONDUSER_PASS,
   })
   await joinGroup(bPage, group)
@@ -109,7 +109,7 @@ test('Workgroup-Chat', async ({ page }) => {
   const bPage = await newWindow()
 
   await login(bPage, {
-    email: process.env.SECONDUSER_MAIL,
+    username: process.env.SECONDUSER_NAME,
     password: process.env.SECONDUSER_PASS,
   })
   await joinGroup(bPage, group)
@@ -169,7 +169,7 @@ test('Group-Chat-Creation', async ({ page }) => {
   // Have other users chat
   const bPage = await newWindow()
   await login(bPage, {
-    email: process.env.SECONDUSER_MAIL,
+    username: process.env.SECONDUSER_NAME,
     password: process.env.SECONDUSER_PASS,
   })
 
@@ -179,7 +179,7 @@ test('Group-Chat-Creation', async ({ page }) => {
 
   const username = 'd'
   await login(cPage, {
-    email: "d@d.se",
+    username: "d",
     password: "d"
   })
 
