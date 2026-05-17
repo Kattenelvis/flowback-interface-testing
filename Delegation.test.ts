@@ -1,11 +1,20 @@
 import { test, chromium, expect } from '@playwright/test'
-import { login, randomString } from './generic'
+import { login, newWindow, randomString, register } from './generic'
 import { createPoll, createProposal, fastForward, goToPost, vote } from './poll'
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group'
 import { becomeDelegate } from './delegation'
 import { idfy } from './generic'
 import 'dotenv/config'
 import { assignPermission, createPermission } from './permission'
+
+async function delegateToUser(page: any, group: { name: string }) {
+  await page.getByRole('button', { name: 'Delegation', exact: true }).click()
+  await page.getByRole('textbox', { name: '0/' }).click()
+  await page.getByRole('textbox', { name: '0/' }).fill(group.name)
+  await page.waitForTimeout(1000)
+  await page.getByRole('radio').first().check()
+  await page.waitForTimeout(1000)
+}
 
 test('Become-Delegate', async ({ page }) => {
   await login(page)
@@ -14,10 +23,9 @@ test('Become-Delegate', async ({ page }) => {
 
   await createGroup(page, group)
 
-  await becomeDelegate(page, group)
+  await page.waitForTimeout(300)
 
-  await gotoGroup(page, group)
-  await deleteGroup(page, group)
+  await becomeDelegate(page, group)
 })
 
 test('Delegation-Poll', async ({ page }) => {
@@ -161,8 +169,6 @@ test('Delegate-History-Shows-Vote', async ({ page }) => {
   const poll = { title: 'Test Poll History ' + randomString(), phase_time: 1 }
   await createPoll(page, poll)
 
-  await fastForward(page, 1)
-
   const proposal = { title: 'Proposal History ' + randomString(), vote: 3 }
   await createProposal(page, proposal)
 
@@ -187,4 +193,78 @@ test('Delegate-History-Shows-Vote', async ({ page }) => {
 
   await gotoGroup(page, group)
   await deleteGroup(page, group)
+})
+
+test('Delegation-Override-Results', async ({ page }) => {
+  test.setTimeout(0)
+  await login(page)
+
+  const group = { name: 'Test Group Delegation Override ' + randomString(), public: true }
+  const poll = { title: 'Test Poll Delegation Override ' + randomString() }
+  const proposalOne = { title: 'Proposal 1 ' + randomString(), vote: 3 }
+  const proposalTwo = { title: 'Proposal 2 ' + randomString(), vote: 2 }
+  const proposalThree = { title: 'Proposal 3 ' + randomString(), vote: 1 }
+
+  const bPage = await newWindow()
+  const cPage = await newWindow()
+
+  await login(cPage, { username: 'c', password: 'c' })
+  await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
+
+  await createGroup(page, group)
+
+  await joinGroup(cPage, group)
+  await becomeDelegate(cPage, group)
+
+  await delegateToUser(page, group)
+
+  await joinGroup(bPage, group)
+  await delegateToUser(bPage, group)
+
+  await gotoGroup(page, group)
+  await createPoll(page, poll)
+  await createProposal(page, proposalOne)
+  await createProposal(page, proposalTwo)
+  await createProposal(page, proposalThree)
+
+  await goToPost(page, poll)
+  await goToPost(bPage, poll)
+  await goToPost(cPage, poll)
+
+  await fastForward(page, 2)
+
+  await cPage.reload()
+  await vote(cPage, proposalOne)
+  await vote(cPage, proposalTwo)
+  await vote(cPage, proposalThree)
+
+  await fastForward(page, 1)
+
+  await page.reload()
+  // TODO: Get vote: 0 to work
+  // await vote(page, { title: proposalTwo.title, vote: 0 })
+  await vote(page, { title: proposalOne.title, vote: 5 })
+
+  await page.reload()
+  await vote(page, { title: proposalOne.title, vote: 3 })
+  await vote(page, { title: proposalTwo.title, vote: 4 })
+
+  await fastForward(page, 1)
+
+  await expect(page.getByText('Results', { exact: true })).toBeVisible()
+
+  const resultOne = page.locator('div.border-gray-300.border-b-2').filter({ hasText: proposalOne.title }).first()
+  const resultTwo = page.locator('div.border-gray-300.border-b-2').filter({ hasText: proposalTwo.title }).first()
+  const resultThree = page.locator('div.border-gray-300.border-b-2').filter({ hasText: proposalThree.title }).first()
+
+  await expect(resultOne).toContainText('Points: 11')
+  await expect(resultTwo).toContainText('Points: 6')
+  await expect(resultThree).toContainText('Points: 1')
+
+  await expect(cPage.getByText('Results', { exact: true })).toBeVisible()
+  await expect(cPage.locator('div').filter({ hasText: proposalOne.title }).getByText('Points: 11')).toBeVisible()
+
+  await page.close()
+  await bPage.close()
+  await cPage.close()
 })

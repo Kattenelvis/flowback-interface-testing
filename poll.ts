@@ -45,9 +45,9 @@ export async function goToPost(page: any, { title = 'Test Poll' }) {
   await page.getByPlaceholder('Search polls').fill(title)
 
   await expect(
-    await page.locator('#thumbnails > div').getByRole('link', { name: title, exact: true }).first(),
+    await page.getByRole('button', { name: title, exact: true }).first(),
   ).toBeVisible()
-  await page.locator('#thumbnails > div').getByRole('link', { name: title, exact: true }).first().click()
+  await page.getByRole('button', { name: title, exact: true }).first().click()
   await expect(await page.getByRole('heading', { name: title })).toBeVisible()
 
   // expect(await page.locator('#poll-thumbnail-140').getByRole('link', { name: 'Test Poll' })).toBeVisible();
