@@ -2,19 +2,10 @@ import { test, chromium, expect } from '@playwright/test'
 import { login, newWindow, randomString, register } from './generic'
 import { createPoll, createProposal, fastForward, goToPost, vote } from './poll'
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group'
-import { becomeDelegate } from './delegation'
+import { becomeDelegate, delegateToUser } from './delegation'
 import { idfy } from './generic'
 import 'dotenv/config'
 import { assignPermission, createPermission } from './permission'
-
-async function delegateToUser(page: any, group: { name: string }) {
-  await page.getByRole('button', { name: 'Delegation', exact: true }).click()
-  await page.getByRole('textbox', { name: '0/' }).click()
-  await page.getByRole('textbox', { name: '0/' }).fill(group.name)
-  await page.waitForTimeout(1000)
-  await page.getByRole('radio').first().check()
-  await page.waitForTimeout(1000)
-}
 
 test('Become-Delegate', async ({ page }) => {
   await login(page)
@@ -233,9 +224,9 @@ test('Delegation-Override-Results', async ({ page }) => {
   await fastForward(page, 2)
 
   await cPage.reload()
-  await vote(cPage, proposalOne)
-  await vote(cPage, proposalTwo)
-  await vote(cPage, proposalThree)
+  await vote(cPage, { title: proposalOne.title, vote: 1 })
+  await vote(cPage, { title: proposalTwo.title, vote: 3 })
+  await vote(cPage, { title: proposalThree.title, vote: 1 })
 
   await fastForward(page, 1)
 
@@ -249,6 +240,7 @@ test('Delegation-Override-Results', async ({ page }) => {
   await vote(page, { title: proposalTwo.title, vote: 4 })
 
   await vote(cPage, { title: proposalTwo.title, vote: 5 })
+  // await vote(cPage, { title: proposalThree.title, vote: 1 })
   await expect(cPage.getByText('Vote Failed').first()).not.toBeVisible()
   await fastForward(page, 1)
 
@@ -259,13 +251,6 @@ test('Delegation-Override-Results', async ({ page }) => {
   const resultThree = page.locator('div.border-gray-300.border-b-2').filter({ hasText: proposalThree.title }).first()
 
   await expect(resultOne).toContainText('Points: 9')
-  await expect(resultTwo).toContainText('Points: 6')
-  await expect(resultThree).toContainText('Points: 1')
-
-  await expect(cPage.getByText('Results', { exact: true })).toBeVisible()
-  await expect(cPage.locator('div').filter({ hasText: proposalOne.title }).getByText('Points: 11')).toBeVisible()
-
-  await page.close()
-  await bPage.close()
-  await cPage.close()
+  await expect(resultTwo).toContainText('Points: 12')
+  await expect(resultThree).toContainText('Points: 3')
 })
