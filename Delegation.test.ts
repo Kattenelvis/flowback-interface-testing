@@ -228,7 +228,6 @@ test('Delegation-Override-Results', async ({ page }) => {
   await createProposal(page, proposalThree)
 
   await goToPost(page, poll)
-  await goToPost(bPage, poll)
   await goToPost(cPage, poll)
 
   await fastForward(page, 2)
@@ -240,15 +239,17 @@ test('Delegation-Override-Results', async ({ page }) => {
 
   await fastForward(page, 1)
 
-  await page.reload()
   // TODO: Get vote: 0 to work
   // await vote(page, { title: proposalTwo.title, vote: 0 })
+  await vote(cPage, { title: proposalOne.title, vote: 5 })
   await vote(page, { title: proposalOne.title, vote: 5 })
 
   await page.reload()
   await vote(page, { title: proposalOne.title, vote: 3 })
   await vote(page, { title: proposalTwo.title, vote: 4 })
 
+  await vote(cPage, { title: proposalTwo.title, vote: 5 })
+  await expect(cPage.getByText('Vote Failed').first()).not.toBeVisible()
   await fastForward(page, 1)
 
   await expect(page.getByText('Results', { exact: true })).toBeVisible()
@@ -257,7 +258,7 @@ test('Delegation-Override-Results', async ({ page }) => {
   const resultTwo = page.locator('div.border-gray-300.border-b-2').filter({ hasText: proposalTwo.title }).first()
   const resultThree = page.locator('div.border-gray-300.border-b-2').filter({ hasText: proposalThree.title }).first()
 
-  await expect(resultOne).toContainText('Points: 11')
+  await expect(resultOne).toContainText('Points: 9')
   await expect(resultTwo).toContainText('Points: 6')
   await expect(resultThree).toContainText('Points: 1')
 
