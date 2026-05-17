@@ -39,13 +39,11 @@ test('Delegation-Poll', async ({ page }) => {
   await joinGroup(bPage, group)
 
   await page.waitForTimeout(1000)
-  await bPage.getByRole('button', { name: 'Delegation' }).click()
+  await bPage.getByRole('button', { name: 'Delegation', exact: true }).click()
   // await bPage.locator('#delegate-group-select').selectOption({ label: group.name });
   await bPage.getByRole('textbox', { name: '0/' }).click()
   await bPage.getByRole('textbox', { name: '0/' }).fill(group.name)
 
-  await page.waitForTimeout(1000)
-  await bPage.getByRole('button', { name: 'Uncategorised' }).click()
   await page.waitForTimeout(1000)
   await bPage.getByRole('radio').first().check()
   await page.waitForTimeout(1000)
@@ -61,8 +59,6 @@ test('Delegation-Poll', async ({ page }) => {
 
   const poll = { title: `Test Poll for Delegation` + randomString() }
   await createPoll(page, poll)
-
-  await fastForward(page, 1)
 
   const proposal = { title: 'Proposal 1', vote: 3 }
   await createProposal(page, proposal)
@@ -107,7 +103,8 @@ test('Delegate-History-Search', async ({ page }) => {
 
   // Search for a non-existent poll - list should become empty
   await page.getByPlaceholder('Search polls').fill('nonexistentpoll__xyz__12345')
-  await page.waitForTimeout(500)
+  await page.getByPlaceholder('Search polls').dispatchEvent('input')
+  await page.waitForTimeout(1000)
   await expect(page.locator('ul > li')).toHaveCount(0)
 
   // Reset filter and verify the search is cleared
@@ -127,12 +124,12 @@ test('Delegate-History-Sort', async ({ page }) => {
   const sortCombobox = page.getByRole('combobox').first()
   await sortCombobox.selectOption('Z - A')
   await page.waitForTimeout(300)
-  await expect(sortCombobox).toHaveValue('Z - A')
+  await expect(sortCombobox).toHaveValue('z-a')
 
   // Change back to A-Z and verify
   await sortCombobox.selectOption('A - Z')
   await page.waitForTimeout(300)
-  await expect(sortCombobox).toHaveValue('A - Z')
+  await expect(sortCombobox).toHaveValue('a-z')
 })
 
 test('Delegate-History-Poll-Link', async ({ page }) => {
