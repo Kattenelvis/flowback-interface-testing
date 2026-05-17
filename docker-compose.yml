@@ -2,4 +2,8 @@ services:
   flowback-testing:
     build: .
     restart: unless-stopped
-    command: npx playwright test . 
+    command: npx playwright test .
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    environment:
+      - LINK=http://host.docker.internal:4000
