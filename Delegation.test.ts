@@ -63,7 +63,7 @@ test('Delegation-Poll', async ({ page }) => {
   const proposal = { title: 'Proposal 1', vote: 3 }
   await createProposal(page, proposal)
 
-  await fastForward(page, 3)
+  await fastForward(page, 2)
 
   await vote(page, proposal)
 
