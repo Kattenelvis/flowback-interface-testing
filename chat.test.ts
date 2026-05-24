@@ -177,10 +177,10 @@ test('Group-Chat-Creation', async ({ page }) => {
   // TODO: Fix so a recently registered account is also included
   // const { username } = await register(cPage)
 
-  const username = 'd'
+  const username = process.env.FOURTHUSER_NAME
   await login(cPage, {
-    username: "d",
-    password: "d"
+    username: process.env.FOURTHUSER_NAME,
+    password: process.env.FOURTHUSER_PASS,
   })
 
   await page.getByRole('button', { name: 'avatar + Invite user' }).nth(1).click()

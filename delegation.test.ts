@@ -199,7 +199,7 @@ test('Delegation-Override-Results', async ({ page }) => {
   const bPage = await newWindow()
   const cPage = await newWindow()
 
-  await login(cPage, { username: 'c', password: 'c' })
+  await login(cPage, { username: process.env.THIRDUSER_NAME, password: process.env.THIRDUSER_PASS })
   await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
 
   await createGroup(page, group)

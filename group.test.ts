@@ -61,7 +61,7 @@ test.describe('Create-Delete-Group Invite only', () => {
     test('Ask to Join Group Invite', async ({ page }) => {
         await login(page)
         const bPage = await newWindow()
-        await login(bPage, { username: process.env.SECONDUSER_NAME, password: 'b' })
+        await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
         await joinGroup(bPage, groupInvite)
 
         await gotoGroup(page, groupInvite)
@@ -73,7 +73,7 @@ test.describe('Create-Delete-Group Invite only', () => {
 
     test('Leave Group Invite', async ({ page }) => {
         const bPage = await newWindow()
-        await login(bPage, { username: process.env.SECONDUSER_NAME, password: 'b' })
+        await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
         await gotoGroup(bPage, groupInvite)
         await bPage.getByRole('button', { name: 'Leave group' }).click()
         await bPage.getByRole('button', { name: 'Yes', exact: true }).click()
