@@ -44,6 +44,7 @@ test('Delegation-Poll', async ({ page }) => {
   await bPage.getByRole('textbox', { name: '0/' }).fill(group.name)
 
   await page.waitForTimeout(1000)
+  await expect(bPage.getByText("There are currently no delegates for this group")).not.toBeVisible()
   await bPage.getByRole('radio').first().check()
   await page.waitForTimeout(1000)
 
