@@ -15,8 +15,8 @@ export async function becomeDelegate(page: any, group = { name: 'Test Group Dele
   if (!(await page.getByRole('button', { name: 'Stop being delegate' }).isVisible())) {
     // await page.getByRole('button', { name: 'Stop being delegate' }).click();
     await page.waitForTimeout(1000)
-    await page.getByRole('button', { name: 'Become delegate' }).nth(1).click()
-    await expect(page.getByText('Successfully became delegate')).toBeVisible()
+    await page.getByRole('button', { name: 'Apply', exact: true }).click()
+    await expect(page.getByText('Stop being delegate')).toBeVisible()
   }
 }
 
