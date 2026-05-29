@@ -26,13 +26,11 @@ test('Delegation-Poll', async ({ page }) => {
 
   await createGroup(page, group)
 
+  const bPage = await newWindow()
+
   await page.waitForTimeout(300)
 
   await becomeDelegate(page, group)
-
-  const browser = await chromium.launch()
-  const bContext = await browser.newContext()
-  const bPage = await bContext.newPage()
 
   await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
   await joinGroup(bPage, group)
