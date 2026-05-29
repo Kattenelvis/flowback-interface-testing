@@ -81,8 +81,14 @@ test('Delegation-Poll', async ({ page }) => {
 test('Delegate-History-Navigation', async ({ page }) => {
   await login(page)
 
-  await page.goto(`${process.env.LINK}/delegations`)
+  const group = { name: 'Test Group Delegation History Navigation' + randomString(), public: true }
+
+  await createGroup(page, group)
+
+  await becomeDelegate(page, group)
+
   await expect(page.getByRole('heading', { name: 'Manage Delegations' })).toBeVisible()
+  await page.getByRole("button", { name: "Cancel" }).click()
   await expect(page.getByText('Delegates')).toBeVisible()
 
   // Click the History link for the first visible delegate
@@ -197,9 +203,11 @@ test('Delegation-Override-Results', async ({ page }) => {
 
   const bPage = await newWindow()
   const cPage = await newWindow()
+  const dPage = await newWindow()
 
   await login(cPage, { username: process.env.THIRDUSER_NAME, password: process.env.THIRDUSER_PASS })
   await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
+  await login(dPage, { username: process.env.FOURTHUSER_NAME, password: process.env.FOURTHUSER_PASS })
 
   await createGroup(page, group)
 
@@ -210,6 +218,14 @@ test('Delegation-Override-Results', async ({ page }) => {
 
   await joinGroup(bPage, group)
   await delegateToUser(bPage, group)
+
+  // D joins with empty permission (no voting rights)
+  await joinGroup(dPage, group)
+  await gotoGroup(page, group)
+  await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click')
+  const emptyPermission = 'No Voting ' + randomString()
+  await createPermission(page, group, [], emptyPermission)
+  await assignPermission(page, group, emptyPermission, process.env.FOURTHUSER_NAME)
 
   await gotoGroup(page, group)
   await createPoll(page, poll)
@@ -227,6 +243,17 @@ test('Delegation-Override-Results', async ({ page }) => {
   await vote(cPage, { title: proposalTwo.title, vote: 3 })
   await vote(cPage, { title: proposalThree.title, vote: 1 })
 
+  // A's vote should be disabled (not a delegate)
+  await page.reload()
+  await expect(page.locator(`#track-container-${idfy(proposalOne.title)}`)).toContainClass('disabled')
+
+  // D's vote should be disabled (no voting permission)
+  await goToPost(dPage, poll)
+  await dPage.reload()
+  await expect(dPage.locator(`#track-container-${idfy(proposalOne.title)}`)).toContainClass('disabled')
+  await expect(dPage.getByText("You are not allowed to vote")).toBeVisible()
+
+  await expect(cPage.getByText('Vote Failed').first()).not.toBeVisible()
   await fastForward(page, 1)
 
   // TODO: Get vote: 0 to work
@@ -239,7 +266,7 @@ test('Delegation-Override-Results', async ({ page }) => {
   await vote(page, { title: proposalTwo.title, vote: 4 })
 
   await vote(cPage, { title: proposalTwo.title, vote: 5 })
-  // await vote(cPage, { title: proposalThree.title, vote: 1 })
+  // Delegates should be able to vote in normal vote phase
   await expect(cPage.getByText('Vote Failed').first()).not.toBeVisible()
   await fastForward(page, 1)
 
