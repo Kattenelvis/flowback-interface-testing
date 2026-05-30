@@ -40,7 +40,7 @@ test('Group-Notification', async ({ page }) => {
 // TODO: Move this into another test such as Poll-Start-To-Finish or Group-Notification
 // TODO: Add more group notification tests
 test('Poll-Start-To-Finish-Notification', async ({ page }) => {
-  test.skip()
+  test.setTimeout(120000)
   await login(page)
 
   const bPage = await newWindow()
@@ -86,5 +86,5 @@ test('Poll-Start-To-Finish-Notification', async ({ page }) => {
 const comment = async (page, message: string) => {
   await page.getByPlaceholder('Write a comment...').click()
   await page.getByPlaceholder('Write a comment...').fill(message)
-  await page.locator('.text-center.dark\\:saturate-\\[60\\%\\].transition-colors.duration-50.submit-button').click()
+  await page.locator('button[type="submit"]').click()
 }

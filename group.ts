@@ -68,13 +68,15 @@ export async function gotoFirstGroup(page: any) {
 
 export async function joinGroup(page: any, group = { name: 'Test Group' }) {
   await page.locator('#groups').click()
+  await page.waitForLoadState('networkidle')
   await page.getByPlaceholder('Search groups').click()
-  await page.getByPlaceholder('Search groups').fill(group.name)
-  await page.getByRole('heading', { name: group.name, exact: true })
-  const joinButton = await page.locator(`#join-${idfy(group.name)}`)
-  await expect(joinButton).toBeVisible()
+  await page.getByPlaceholder('Search groups').fill('')
+  await page.waitForTimeout(500)
+  await page.getByPlaceholder('Search groups').type(group.name)
+  await page.waitForTimeout(500)
+  const joinButton = page.locator(`#join-${idfy(group.name)}`)
+  await expect(joinButton).toBeVisible({ timeout: 10000 })
 
-  // await expect(joinButton).toBeVisible();
   if ((await joinButton.innerText()).trim() === 'Join' || (await joinButton.innerText()).trim() === 'Ask to join')
     await joinButton.click()
 }
