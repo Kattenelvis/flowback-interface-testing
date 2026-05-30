@@ -61,7 +61,7 @@ test('Poll-Start-To-Finish-Notification', async ({ page }) => {
 
   await bPage.reload()
   await bPage.locator('#notifications-list').click()
-  await bPage.getByRole('button', { name: 'a new poll has been posted' }).nth(0).click()
+  await bPage.getByRole('button', { name: 'A new poll has been posted' }).nth(0).click()
   await expect(bPage.getByText(poll.title)).toBeVisible()
 
   await bPage.getByRole('button').filter({ hasText: /^$/ }).nth(4).click()
@@ -71,7 +71,7 @@ test('Poll-Start-To-Finish-Notification', async ({ page }) => {
 
   await bPage.reload()
   await bPage.locator('#notifications-list').click()
-  await bPage.getByRole('button', { name: 'a new comment has been posted' }).nth(0).click()
+  await bPage.getByRole('button', { name: 'A new comment has been posted' }).nth(0).click()
   await expect(bPage.getByText(poll.title)).toBeVisible()
 
   await fastForward(page, 6)
