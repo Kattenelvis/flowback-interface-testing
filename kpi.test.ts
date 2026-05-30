@@ -3,7 +3,7 @@ import { login, randomString } from './generic';
 import { createGroup, gotoGroup } from './group';
 
 test('KPI-Create', async ({ page }) => {
-  const group = { name: 'Invitation ' + randomString() }
+  const group = { name: 'KPI-' + randomString() }
   await login(page)
   await createGroup(page, group)
   // await gotoGroup(group)
@@ -22,5 +22,6 @@ test('KPI-Create', async ({ page }) => {
   await page.getByRole('textbox', { name: 'Values (comma-separated' }).click();
   await page.getByRole('textbox', { name: 'Values (comma-separated' }).fill('-1,0,hi,text');
   await page.getByRole('button', { name: 'Add' }).click();
-  page.getByText('Successfully added KPI')
+  expect(page.getByText('Successfully added KPI')).toBeVisible()
+  await page.locator('.switch').click()
 })
