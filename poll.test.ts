@@ -411,7 +411,7 @@ test('Poll-Start-To-Finish', async ({ page }) => {
 test('Date-Poll', async ({ page }) => {
   await login(page)
 
-  const group = { name: 'Test Group Poll', public: false }
+  const group = { name: 'Test Group Poll' + randomString(), public: false }
   const poll = { title: 'Test Group Poll', date: true }
 
   try {
