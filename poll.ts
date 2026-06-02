@@ -133,7 +133,12 @@ export async function predictionProbability(
 export async function vote(page: any, proposal = { title: 'Proposal Title', vote: 1 }) {
   expect(proposal.vote >= 0 && proposal.vote <= 5, 'Vote must be between 0 and 5')
   // Delegate Voting Phase
-  await expect(page.locator('#poll-timeline').filter({ hasText: 'Phase 6. Voting for non-delegates' })).toBeVisible()
+  // Wait for a voting phase (delegate or non-delegate)
+
+  await expect(page.locator('#poll-timeline').filter({
+    hasText: /Delegate voting|Voting for non-delegates/
+  })).toBeVisible()
+
   await page.waitForTimeout(400)
   await expect(page.locator(`#track-container-${idfy(proposal.title)}`)).toBeVisible()
   await page
