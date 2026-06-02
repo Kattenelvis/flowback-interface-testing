@@ -54,10 +54,10 @@ export async function createGroup(page: any, group: group = { name: 'Test Group'
 
 export async function gotoGroup(page: any, group = { name: 'Test Group' }) {
   await page.locator('#groups').click()
+  await page.waitForLoadState('networkidle')
   await page.getByPlaceholder('Search groups').click()
-  await page.getByPlaceholder('Search groups').fill(group.name)
-  await expect(page.getByText(group.name, { exact: true })).toBeVisible()
-  await page.waitForTimeout(400)
+  await page.getByPlaceholder('Search groups').pressSequentially(group.name, { delay: 20 })
+  await expect(page.getByRole('heading', { name: group.name, exact: true })).toBeVisible()
   await page.getByRole('heading', { name: group.name, exact: true }).click()
 }
 
