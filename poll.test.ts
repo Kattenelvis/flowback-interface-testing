@@ -369,7 +369,7 @@ test.skip('Prediction-Probabilities-2', async ({ page }) => {
 test('Poll-Start-To-Finish', async ({ page }) => {
   await login(page)
 
-  const group = { name: 'Test Poll start to finish ', public: false }
+  const group = { name: 'Test Poll start to finish ' + randomString(), public: false }
   await createGroup(page, group)
 
   // await createArea(page, group, 'Tag 1')
@@ -398,7 +398,7 @@ test('Poll-Start-To-Finish', async ({ page }) => {
   //
   // await page.waitForTimeout(500)
 
-  await fastForward(page, 2)
+  await fastForward(page, 3)
 
 
   await vote(page, proposal)

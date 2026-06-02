@@ -42,7 +42,7 @@ test('Thread-Comments', async ({ page }) => {
 test('Thread-Create-Report-Delete', async ({ page }) => {
   await login(page)
 
-  const group = { name: 'Test Group Thread', public: false }
+  const group = { name: 'Test Group Thread' + randomString(), public: false }
 
   await createGroup(page, group)
 

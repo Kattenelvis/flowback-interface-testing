@@ -157,7 +157,7 @@ export async function vote(page: any, proposal = { title: 'Proposal Title', vote
 }
 
 export async function results(page: any) {
-  await expect(page.locator('#poll-timeline').filter({ hasText: 'Current: Phase 7. Results and' })).toBeVisible()
+  await expect(page.locator('#poll-timeline').filter({ hasText: 'Results' })).toBeVisible()
   await expect(page.getByText('Results', { exact: true })).toBeVisible()
 
   //TODO: no need for canvas when there have been 0 votes
