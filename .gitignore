@@ -4,6 +4,7 @@ test-results
 .vscode
 poll.test.ts-snapshots
 tests
+playwright-report.zip
 
 # Playwright
 /playwright-report/
