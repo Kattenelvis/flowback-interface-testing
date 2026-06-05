@@ -400,7 +400,6 @@ test('Poll-Start-To-Finish', async ({ page }) => {
 
   await fastForward(page, 3)
 
-
   await vote(page, proposal)
   await vote(page, proposal2)
 

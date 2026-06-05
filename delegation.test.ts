@@ -100,8 +100,9 @@ test('Delegate-History', async ({ page }) => {
   await fastForward(page, 2)
   await vote(page, proposal)
   await fastForward(page, 2)
-  await page.waitForTimeout(1000)
+  await page.waitForTimeout(4000)
 
+  await fastForward(page, 1)
   // Navigate to delegate history for this group
   await page.goto(`${process.env.LINK}/delegations`)
   await page.getByRole('textbox', { name: '0/' }).fill(group.name)
