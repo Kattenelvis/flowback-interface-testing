@@ -211,7 +211,11 @@ test('Delegation-Override-Results', async ({ page }) => {
   await fastForward(page, 1)
 
   // Reload so cPage picks up the new vote phase (otherwise phase is still delegate_vote)
+  // Ideally we'd eventually fix this with frontend polling on poll phase or events sent from backend or something
   await cPage.reload()
+  await cPage.waitForLoadState('networkidle')
+  await page.reload()
+  await page.waitForLoadState('networkidle')
 
   // TODO: Get vote: 0 to work
   // await vote(page, { title: proposalTwo.title, vote: 0 })
@@ -219,6 +223,7 @@ test('Delegation-Override-Results', async ({ page }) => {
   await vote(page, { title: proposalOne.title, vote: 5 })
 
   await page.reload()
+  await page.waitForLoadState('networkidle')
   await vote(page, { title: proposalOne.title, vote: 3 })
   await vote(page, { title: proposalTwo.title, vote: 4 })
 
