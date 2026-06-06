@@ -210,6 +210,9 @@ test('Delegation-Override-Results', async ({ page }) => {
   await expect(cPage.getByText('Vote Failed').first()).not.toBeVisible()
   await fastForward(page, 1)
 
+  // Reload so cPage picks up the new vote phase (otherwise phase is still delegate_vote)
+  await cPage.reload()
+
   // TODO: Get vote: 0 to work
   // await vote(page, { title: proposalTwo.title, vote: 0 })
   await vote(cPage, { title: proposalOne.title, vote: 5 })
