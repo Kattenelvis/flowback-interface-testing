@@ -5,6 +5,23 @@ on:
   pull_request:
     branches: [main, master]
 
+env:
+  LINK: ${{ secrets.LINK }}
+  TEST_PASS: ${{ secrets.TEST_PASS }}
+  MAINUSER_PASS: "a"
+  MAINUSER_MAIL: "a@a.se"
+  MAINUSER_NAME: "a"
+  SECONDUSER_PASS: "b"
+  SECONDUSER_MAIL: "b@b.se"
+  SECONDUSER_NAME: "b"
+  THIRDUSER_PASS: "c"
+  THIRDUSER_MAIL: "c@c.org"
+  THIRDUSER_NAME: "c"
+  FOURTHUSER_PASS: "d"
+  FOURTHUSER_MAIL: "d@d.org"
+  FOURTHUSER_NAME: "d"
+  PUBLIC_POLL_VERSION: 2
+
 jobs:
   frontend-testing:
     timeout-minutes: 20
