@@ -140,9 +140,6 @@ test('Delegate-History', async ({ page }) => {
   await expect(firstItem).toBeVisible()
   await firstItem.getByRole('link').first().click()
   await expect(page).toHaveURL(/source=delegate-history/)
-
-  await gotoGroup(page, group)
-  // await deleteGroup(page, group)
 })
 
 test('Delegation-Override-Results', async ({ page }) => {
