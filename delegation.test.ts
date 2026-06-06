@@ -142,7 +142,7 @@ test('Delegate-History', async ({ page }) => {
   await expect(page).toHaveURL(/source=delegate-history/)
 
   await gotoGroup(page, group)
-  await deleteGroup(page, group)
+  // await deleteGroup(page, group)
 })
 
 test('Delegation-Override-Results', async ({ page }) => {
