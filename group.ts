@@ -58,14 +58,22 @@ export async function createGroup(page: any, group: group = { name: 'Test Group'
 export async function gotoGroup(page: any, group = { name: 'Test Group' }) {
   await page.locator('#groups').click()
   await expect(page.getByPlaceholder('Search groups')).toBeVisible({ timeout: 10000 })
-  await page.getByPlaceholder('Search groups').click()
-  await page.getByPlaceholder('Search groups').fill('')
-  const groupSearchResponse = page.waitForResponse((response: Response) => {
-    if (!responseMatches(response, 'GET', /\/group\/list$/)) return false
-    return new URL(response.url()).searchParams.get('name__icontains') === group.name
-  })
-  await page.getByPlaceholder('Search groups').fill(group.name)
-  await expectOkResponse(await groupSearchResponse, 'Search groups')
+
+  // Search with retry: fill('') can race with fill(group.name) if the empty-search response
+  // arrives after the targeted-search response, overwriting UI. Retry resolves this.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    await page.getByPlaceholder('Search groups').fill('')
+    const groupSearchResponse = page.waitForResponse((response: Response) => {
+      if (!responseMatches(response, 'GET', /\/group\/list$/)) return false
+      return new URL(response.url()).searchParams.get('name__icontains') === group.name
+    })
+    await page.getByPlaceholder('Search groups').fill(group.name)
+    await expectOkResponse(await groupSearchResponse, 'Search groups')
+    if (await page.getByRole('heading', { name: group.name, exact: true }).isVisible().catch(() => false)) break
+    // Brief wait for any late-arriving response to settle before retrying
+    await page.waitForTimeout(1000)
+  }
+
   await expect(page.getByRole('heading', { name: group.name, exact: true })).toBeVisible({ timeout: 10000 })
   await page.getByRole('heading', { name: group.name, exact: true }).click()
   await expect(page).toHaveURL(/\/groups\/\d+$/, { timeout: 15000 })
@@ -80,8 +88,12 @@ export async function gotoFirstGroup(page: any) {
 export async function joinGroup(page: any, group = { name: 'Test Group' }) {
   await page.locator('#groups').click()
   await expect(page.getByPlaceholder('Search groups')).toBeVisible({ timeout: 10000 })
-  await page.getByPlaceholder('Search groups').click()
   await page.getByPlaceholder('Search groups').fill('')
+  // Wait for empty-search response to settle before targeted search
+  await Promise.race([
+    page.waitForResponse((r: Response) => responseMatches(r, 'GET', /\/group\/list$/)),
+    page.waitForTimeout(3000),
+  ])
   const groupSearchResponse = page.waitForResponse((response: Response) => {
     if (!responseMatches(response, 'GET', /\/group\/list$/)) return false
     return new URL(response.url()).searchParams.get('name__icontains') === group.name

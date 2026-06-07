@@ -6,7 +6,11 @@ import { expectOkResponse, responseMatches } from './generic'
 export async function fastForward(page: any, times = 1) {
   await expect(page.locator('#poll-header-multiple-choices')).toBeVisible()
   for (let i = 0; i < times; i++) {
-    const visible = await page.getByRole('button', { name: 'Fast Forward' }).isVisible({ timeout: 1000 }).catch(() => false)
+    if (i > 0) {
+      await page.reload({ waitUntil: 'domcontentloaded' })
+      await expect(page.locator('#poll-header-multiple-choices')).toBeVisible()
+    }
+    const visible = await page.getByRole('button', { name: 'Fast Forward' }).isVisible().catch(() => false)
     if (!visible) await page.locator('#poll-header-multiple-choices').click()
     const fastForwardResponse = page.waitForResponse((response: Response) =>
       responseMatches(response, 'POST', /\/group\/poll\/\d+\/fast_forward$/),
@@ -207,19 +211,22 @@ export async function vote(page: any, proposal = { title: 'Proposal Title', vote
 
   await page.waitForTimeout(400)
   await expect(page.locator(`#track-container-${idfy(proposal.title)}`)).toBeVisible()
-  await page
-    .locator(`#track-container-${idfy(proposal.title)} > div:nth-child(${2 + proposal.vote})`)
-    .first()
-    .click()
 
-  // await page.locator('#track-container-test-proposal > div:nth-child(4)').click();
-  // await page.locator("#proposals-section").screenshot({ path: 'tests/voting.png', fullPage: true });
-  // expect(await page.locator("#proposals-section")).toHaveScreenshot('tests/voting.png');
+  const trackContainer = page.locator(`#track-container-${idfy(proposal.title)}`)
+  const box = await trackContainer.boundingBox()
+  expect(box, `Track container for "${proposal.title}" has no bounding box`).toBeTruthy()
 
-  // await page.reload();
-  // await page.waitForLoadState('networkidle');
+  // Click at the proportional position for the desired vote (0-5 maps to 0-100% of width)
+  const xOffset = (proposal.vote / 5) * box!.width
+  const yOffset = box!.height / 2
 
-  // expect(await page.locator("#proposals-section")).toHaveScreenshot('tests/voting.png');
+  const voteResponse = page.waitForResponse(
+    (response: Response) =>
+      responseMatches(response, 'POST', /\/group\/poll\/\d+\/proposal\/vote\/(update|delegate\/update)$/),
+    { timeout: 15000 },
+  )
+  await trackContainer.click({ position: { x: xOffset, y: yOffset } })
+  await expectOkResponse(await voteResponse, `Vote on "${proposal.title}" = ${proposal.vote}`)
 }
 
 export async function results(page: any) {

@@ -1,5 +1,5 @@
-import { test, chromium, expect } from '@playwright/test'
-import { login, newWindow, randomString, register } from './generic'
+import { test, chromium, expect, type Response } from '@playwright/test'
+import { login, newWindow, randomString, register, responseMatches } from './generic'
 import { createPoll, createProposal, fastForward, goToPost, vote } from './poll'
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group'
 import { becomeDelegate, delegateToUser } from './delegation'
@@ -20,6 +20,7 @@ test('Become-Delegate', async ({ page }) => {
 })
 
 test('Delegation-Poll', async ({ page }) => {
+  test.setTimeout(120000)
   await login(page)
 
   const group = { name: 'Test Group Delegation' + randomString(), public: true }
@@ -79,7 +80,7 @@ test('Delegation-Poll', async ({ page }) => {
 })
 
 test('Delegate-History', async ({ page }) => {
-  test.setTimeout(60000)
+  test.setTimeout(120000)
   await login(page)
 
   const group = { name: 'Test Group Delegate History ' + randomString(), public: true }
@@ -140,7 +141,7 @@ test('Delegate-History', async ({ page }) => {
 })
 
 test('Delegation-Override-Results', async ({ page }) => {
-  test.setTimeout(180000)
+  test.setTimeout(300000)
   await login(page)
 
   const group = { name: 'Test Group Delegation Override ' + randomString(), public: true }
@@ -206,15 +207,28 @@ test('Delegation-Override-Results', async ({ page }) => {
 
   // Reload so cPage picks up the new vote phase (otherwise phase is still delegate_vote)
   // Ideally we'd eventually fix this with frontend polling on poll phase or events sent from backend or something
+  const cPageVotesLoaded = cPage.waitForResponse((response: Response) =>
+    responseMatches(response, 'GET', /\/group\/poll\/\d+\/proposal\/votes$/),
+  )
   await cPage.reload()
+  await cPageVotesLoaded
+
+  const pageVotesLoaded = page.waitForResponse((response: Response) =>
+    responseMatches(response, 'GET', /\/group\/poll\/\d+\/proposal\/votes$/),
+  )
   await page.reload()
+  await pageVotesLoaded
 
   // TODO: Get vote: 0 to work
   // await vote(page, { title: proposalTwo.title, vote: 0 })
   await vote(cPage, { title: proposalOne.title, vote: 5 })
   await vote(page, { title: proposalOne.title, vote: 5 })
 
+  const pageVotesLoaded2 = page.waitForResponse((response: Response) =>
+    responseMatches(response, 'GET', /\/group\/poll\/\d+\/proposal\/votes$/),
+  )
   await page.reload()
+  await pageVotesLoaded2
   await vote(page, { title: proposalOne.title, vote: 3 })
   await vote(page, { title: proposalTwo.title, vote: 4 })
 

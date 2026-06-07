@@ -115,8 +115,6 @@ test('Proposal-Spam-Test', async ({ page }) => {
 
   await createGroup(page, group)
 
-  await gotoGroup(page, group)
-
   await createPoll(page, { phase_time: 1 })
 
   for (let i = 0; i < 10; i++) {

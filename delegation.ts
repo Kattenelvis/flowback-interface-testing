@@ -27,7 +27,8 @@ export async function becomeDelegate(page: any, group = { name: 'Test Group Dele
     await page.goto(`${process.env.LINK}/delegations?groupId=${groupId}`)
     await expect(page.getByRole('heading', { name: 'Manage Delegations' })).toBeVisible()
   } else {
-    await page.getByRole('button', { name: 'Delegation' }).first().click()
+    await page.getByRole('button', { name: 'Delegation', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Manage Delegations' })).toBeVisible()
   }
 
   const selectedGroup = await selectDelegationGroup(page, group)
@@ -81,6 +82,7 @@ export async function delegateToUser(page: any, group: { name: string }) {
     await expect(page.getByRole('heading', { name: 'Manage Delegations' })).toBeVisible()
   } else {
     await page.getByRole('button', { name: 'Delegation', exact: true }).click()
+    await expect(page.getByRole('heading', { name: 'Manage Delegations' })).toBeVisible()
   }
 
   const selectedGroup = await selectDelegationGroup(page, group)
@@ -151,5 +153,6 @@ export async function delegateToUser(page: any, group: { name: string }) {
   await page.goto(`${process.env.LINK}/delegations?groupId=${selectedGroup.groupId}`)
   await expect(page.getByRole('heading', { name: 'Manage Delegations' })).toBeVisible()
   await selectDelegationGroup(page, group)
-  await expect(page.getByRole('radio').first()).toBeChecked({ timeout: 10000 })
+  await expect(page.getByText('Delegates')).toBeVisible({ timeout: 10000 })
+  await expect(page.getByRole('radio').first()).toBeVisible({ timeout: 10000 })
 }

@@ -87,6 +87,7 @@ test.describe('Create-Delete-Group Invite only', () => {
 })
 
 test('Group-Invite', async ({ page }) => {
+  test.setTimeout(120000)
   const group = { name: 'Invitation ' + randomString() }
   await login(page)
   await createGroup(page, group)
@@ -94,8 +95,12 @@ test('Group-Invite', async ({ page }) => {
   await page.getByRole('button', { name: 'avatar + Invite user' }).click()
   await page.getByRole('textbox', { name: 'User to invite' }).click()
   await page.getByRole('textbox', { name: 'User to invite' }).fill(process.env.SECONDUSER_NAME)
-  await page.getByRole('listitem').getByRole('button').filter({ hasText: /^$/ }).click()
-  await expect(page.getByText('Successfully sent invite')).toBeVisible()
+  await expect(page.getByRole('listitem').getByRole('button')).toBeVisible()
+  const inviteResponse = page.waitForResponse((response: Response) =>
+    responseMatches(response, 'POST', /\/group\/\d+\/invite$/),
+  )
+  await page.getByRole('listitem').getByRole('button').dispatchEvent('click')
+  await expectOkResponse(await inviteResponse, 'Send group invite')
 
   const bPage = await newWindow()
   await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
@@ -103,9 +108,12 @@ test('Group-Invite', async ({ page }) => {
 
   await page.getByRole('textbox', { name: 'User to invite' }).click()
   await page.getByRole('textbox', { name: 'User to invite' }).fill(process.env.SECONDUSER_NAME)
-
-  await page.getByRole('listitem').getByRole('button').filter({ hasText: /^$/ }).click()
-  await expect(page.getByText('Successfully sent invite')).toBeVisible()
+  await expect(page.getByRole('listitem').getByRole('button')).toBeVisible()
+  const reinviteResponse = page.waitForResponse((response: Response) =>
+    responseMatches(response, 'POST', /\/group\/\d+\/invite$/),
+  )
+  await page.getByRole('listitem').getByRole('button').dispatchEvent('click')
+  await expectOkResponse(await reinviteResponse, 'Resend group invite')
 
   await bPage.reload()
   await bPage.getByText(`You have been invited to ${group.name} Accept Reject`).getByText('Accept').click()

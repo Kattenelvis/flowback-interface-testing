@@ -39,10 +39,20 @@ export async function assignPermission(
     await page.getByRole('button', { name: 'Permissions' }).click()
     await page.getByRole('button', { name: 'Assign' }).click()
 
-    // console.log(`#plus-${idfy(user_name)}`);
-
     const addRoleButton = page.locator(`#plus-${idfy(user_name)}`)
-    await expect(addRoleButton).toBeVisible()
+
+    // Member list may not include the user yet if they just joined — reload and retry
+    for (let attempt = 0; attempt < 3; attempt++) {
+        if (await addRoleButton.isVisible({ timeout: 5000 }).catch(() => false)) break
+        if (attempt === 2) {
+            await expect(addRoleButton).toBeVisible()
+            break
+        }
+        await page.reload({ waitUntil: 'domcontentloaded' })
+        await expect(page.getByRole('heading', { name: 'Admin Settings' })).toBeVisible()
+        await page.getByRole('button', { name: 'Permissions' }).click()
+        await page.getByRole('button', { name: 'Assign' }).click()
+    }
     await addRoleButton.click()
 
     const updatePermissionResponse = page.waitForResponse((response: Response) =>
