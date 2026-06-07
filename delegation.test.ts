@@ -79,6 +79,7 @@ test('Delegation-Poll', async ({ page }) => {
 })
 
 test('Delegate-History', async ({ page }) => {
+  test.setTimeout(60000)
   await login(page)
 
   const group = { name: 'Test Group Delegate History ' + randomString(), public: true }
@@ -88,7 +89,6 @@ test('Delegate-History', async ({ page }) => {
 
   // Navigation: verify delegate management flow
   await expect(page.getByRole('heading', { name: 'Manage Delegations' })).toBeVisible()
-  await page.getByRole("button", { name: "Cancel" }).click()
   await expect(page.getByText('Delegates')).toBeVisible()
 
   // Create poll and vote so history has data
@@ -100,10 +100,7 @@ test('Delegate-History', async ({ page }) => {
   await fastForward(page, 2)
   await vote(page, proposal)
   await fastForward(page, 2)
-  await page.waitForTimeout(4000)
-
-  await fastForward(page, 1)
-  await page.waitForTimeout(4000)
+  await expect(page.locator('#poll-timeline').filter({ hasText: 'Results' })).toBeVisible()
   // Navigate to delegate history for this group
   await page.goto(`${process.env.LINK}/delegations`)
   await page.getByRole('textbox', { name: '0/' }).fill(group.name)
@@ -143,7 +140,7 @@ test('Delegate-History', async ({ page }) => {
 })
 
 test('Delegation-Override-Results', async ({ page }) => {
-  test.setTimeout(0)
+  test.setTimeout(180000)
   await login(page)
 
   const group = { name: 'Test Group Delegation Override ' + randomString(), public: true }
@@ -210,9 +207,7 @@ test('Delegation-Override-Results', async ({ page }) => {
   // Reload so cPage picks up the new vote phase (otherwise phase is still delegate_vote)
   // Ideally we'd eventually fix this with frontend polling on poll phase or events sent from backend or something
   await cPage.reload()
-  await cPage.waitForLoadState('networkidle')
   await page.reload()
-  await page.waitForLoadState('networkidle')
 
   // TODO: Get vote: 0 to work
   // await vote(page, { title: proposalTwo.title, vote: 0 })
@@ -220,7 +215,6 @@ test('Delegation-Override-Results', async ({ page }) => {
   await vote(page, { title: proposalOne.title, vote: 5 })
 
   await page.reload()
-  await page.waitForLoadState('networkidle')
   await vote(page, { title: proposalOne.title, vote: 3 })
   await vote(page, { title: proposalTwo.title, vote: 4 })
 

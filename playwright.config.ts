@@ -14,6 +14,8 @@ import { defineConfig, devices } from '@playwright/test'
 export default defineConfig({
     testDir: './.',
     outputDir: `./test-results/${new Date().toISOString().replace(/[:.]/g, '-')}`,
+    timeout: 60 * 1000,
+    expect: { timeout: 10 * 1000 },
     /* Run tests in files in parallel */
     fullyParallel: true,
     /* Fail the build on CI if you accidentally left test.only in the source code. */

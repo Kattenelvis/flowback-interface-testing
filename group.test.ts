@@ -1,5 +1,5 @@
-import { test, expect } from '@playwright/test'
-import { idfy, login, newWindow, randomString } from './generic'
+import { test, expect, type Response } from '@playwright/test'
+import { expectOkResponse, idfy, login, newWindow, randomString, responseMatches } from './generic'
 import { createGroup, deleteGroup, gotoFirstGroup, gotoGroup, joinGroup } from './group'
 import { createPermission } from './permission'
 
@@ -141,13 +141,24 @@ test('Create-Delete-Group', async ({ page }) => {
   await expect(page.getByText('Pending')).toBeVisible()
   await expect(page.getByRole('button', { name: 'Leave', exact: true }).nth(0)).toBeVisible()
   await page.getByRole('button', { name: 'Add User' }).nth(0).click()
-  await page.getByText('Test Workgroup directjoin Members: 1').nth(0)
-  await page.getByText('Test Workgroup directjoin Members: 1').nth(0).getByRole('button').nth(1).click()
+  const directWorkGroup = page.locator('[id="Test Workgroup directjoin"]')
+  await expect(directWorkGroup).toBeVisible()
+  await directWorkGroup.getByRole('button').last().click()
   await page.getByRole('button', { name: 'Cancel', exact: true }).click()
-  await page.getByText('Test Workgroup directjoin Members: 1').nth(0).getByRole('button').nth(1).click()
+  await directWorkGroup.getByRole('button').last().click()
+  const directWorkGroupDeleteResponse = page.waitForResponse((response: Response) =>
+    responseMatches(response, 'POST', /\/group\/workgroup\/\d+\/delete$/),
+  )
   await page.getByRole('button', { name: 'Delete', exact: true }).click()
-  await page.locator('.dark\\:text-darkmodeText > .text-center').nth(1).click()
+  await expectOkResponse(await directWorkGroupDeleteResponse, 'Delete direct workgroup')
+  const inviteOnlyWorkGroup = page.locator('[id="Test group invite only"]')
+  await expect(inviteOnlyWorkGroup).toBeVisible()
+  await inviteOnlyWorkGroup.getByRole('button').last().click()
+  const inviteOnlyWorkGroupDeleteResponse = page.waitForResponse((response: Response) =>
+    responseMatches(response, 'POST', /\/group\/workgroup\/\d+\/delete$/),
+  )
   await page.getByRole('button', { name: 'Delete', exact: true }).click()
+  await expectOkResponse(await inviteOnlyWorkGroupDeleteResponse, 'Delete invite-only workgroup')
 
   // Editing Group
   await expect(page.locator('#group-header-title')).toHaveText(group.name)

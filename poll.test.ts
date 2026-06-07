@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Response } from '@playwright/test'
 import {
   areaVote,
   createPoll,
@@ -10,7 +10,7 @@ import {
   results,
   vote,
 } from './poll'
-import { login, newWindow, randomString, idfy } from './generic'
+import { expectOkResponse, login, newWindow, randomString, idfy, responseMatches } from './generic'
 import { gotoGroup, createArea, createGroup, joinGroup } from './group'
 import 'dotenv/config'
 
@@ -95,7 +95,11 @@ test('Proposal-Test', async ({ page }) => {
   await page.getByPlaceholder('Write a comment...').click()
   await page.getByPlaceholder('Write a comment...').fill('#')
   await page.getByRole('button', { name: 'Lol' }).click()
-  await page.locator('.flex.gap-1 > button').click()
+  const commentCreateResponse = page.waitForResponse((response: Response) =>
+    responseMatches(response, 'POST', /\/group\/poll\/\d+\/comment\/create$/),
+  )
+  await page.locator('#comments').locator('button[type="submit"]').click()
+  await expectOkResponse(await commentCreateResponse, 'Create poll comment')
   await page.getByRole('button', { name: 'Filter by Proposal' }).click()
   await page.getByRole('checkbox').check()
   await page.getByRole('button', { name: 'Close modal', exact: true }).click()
@@ -387,8 +391,6 @@ test('Poll-Start-To-Finish', async ({ page }) => {
   const proposal2 = { title: 'Test Proposal 2' + randomString(), vote: 3 }
   await createProposal(page, proposal)
   await createProposal(page, proposal2)
-
-  await fastForward(page, 1)
 
   // await predictionStatementCreate(page, proposal)
   //

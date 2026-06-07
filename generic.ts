@@ -1,4 +1,4 @@
-import { chromium, expect } from '@playwright/test'
+import { chromium, expect, type Response } from '@playwright/test'
 import 'dotenv/config'
 
 export const idfy = (text: string) => {
@@ -12,20 +12,55 @@ export async function newWindow() {
   return Page
 }
 
+export function responseMatches(response: Response, method: 'GET' | 'POST', path: RegExp) {
+  try {
+    return response.request().method() === method && path.test(new URL(response.url()).pathname.replace(/\/$/, ''))
+  } catch {
+    return false
+  }
+}
+
+export async function expectOkResponse(response: Response, action: string) {
+  let body = ''
+  try {
+    body = await response.text()
+  } catch {
+    body = ''
+  }
+
+  const details = body ? `${response.status()} ${response.url()} ${body.slice(0, 500)}` : `${response.status()} ${response.url()}`
+  expect(response.ok(), `${action} failed: ${details}`).toBeTruthy()
+}
+
+async function gotoWithRetry(page: any, url: string) {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      await page.goto(url, { waitUntil: 'domcontentloaded' })
+      return
+    } catch (error: any) {
+      const message = String(error?.message ?? error)
+      if (attempt === 3 || !/ERR_NETWORK_CHANGED|ERR_CONNECTION_RESET|ERR_INTERNET_DISCONNECTED/.test(message)) {
+        throw error
+      }
+    }
+  }
+}
+
 export async function login(
   page: any,
   { username = process.env.MAINUSER_NAME ?? 'a', password = process.env.MAINUSER_PASS ?? 'a' } = {},
 ) {
-  await page.goto(`${process.env.LINK}/login`)
+  await gotoWithRetry(page, `${process.env.LINK}/login`)
   await expect(page.locator('#login-page')).toBeVisible()
-  await page.waitForTimeout(700)
 
   await page.fill('input[name="username"]', username)
   await page.fill('input[name="password"]', password)
+  const loginResponse = page.waitForResponse((response: Response) => responseMatches(response, 'POST', /\/login$/))
   await page.click('button[type="submit"]')
+  await expectOkResponse(await loginResponse, 'Login')
 
-  await expect(page).toHaveURL(`${process.env.LINK}/home`)
-  if (await page.getByRole('button', { name: 'Ok', exact: true }).isVisible()) {
+  await expect(page).toHaveURL(`${process.env.LINK}/home`, { timeout: 15000 })
+  if (await page.getByRole('button', { name: 'Ok', exact: true }).isVisible({ timeout: 1000 }).catch(() => false)) {
     await page.getByRole('button', { name: 'Ok', exact: true }).click()
   }
 }
@@ -34,15 +69,16 @@ export async function loginEnter(
   page: any,
   { username = process.env.MAINUSER_NAME ?? 'a', password = process.env.MAINUSER_PASS ?? 'a' } = {},
 ) {
-  await page.goto(`${process.env.LINK}/login`)
+  await gotoWithRetry(page, `${process.env.LINK}/login`)
   await expect(page.locator('#login-page')).toBeVisible()
-  await page.waitForTimeout(700)
 
   await page.fill('input[name="username"]', username)
   await page.fill('input[name="password"]', password)
+  const loginResponse = page.waitForResponse((response: Response) => responseMatches(response, 'POST', /\/login$/))
   await page.getByLabel('Password').press('Enter')
+  await expectOkResponse(await loginResponse, 'Login')
 
-  await expect(page).toHaveURL(`${process.env.LINK}/home`)
+  await expect(page).toHaveURL(`${process.env.LINK}/home`, { timeout: 15000 })
 }
 
 // Tests registring a user

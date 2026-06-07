@@ -1,5 +1,5 @@
-import { idfy } from './generic'
-import { expect } from '@playwright/test'
+import { expect, type Response } from '@playwright/test'
+import { expectOkResponse, idfy, responseMatches } from './generic'
 
 export type group = {
   name: string
@@ -11,13 +11,11 @@ export async function createGroup(page: any, group: group = { name: 'Test Group'
   await page.locator('#groups').click()
   await page.getByPlaceholder('Search groups').click()
   await page.getByPlaceholder('Search groups').fill(group.name)
-  await page.waitForTimeout(500)
 
   // await expect(page.getByRole('heading', { name: group.name, exact: true }).first()).toBeVisible();
   const button = await page.getByRole('heading', { name: group.name, exact: true }).first()
-  await page.waitForTimeout(500)
 
-  if (await button.isVisible()) {
+  if (await button.isVisible({ timeout: 3000 }).catch(() => false)) {
     await button.click()
   } else {
     await page.getByRole('button', { name: 'Groups' }).click()
@@ -41,26 +39,37 @@ export async function createGroup(page: any, group: group = { name: 'Test Group'
         .locator('fieldset')
         .filter({ hasText: 'Invitation Required? Yes No' })
         .getByLabel(group.invite ? 'Yes' : 'No')
-        .check()
+      .check()
     await page.locator('fieldset').filter({ hasText: 'Hide creators? Yes No' }).getByLabel('No').check()
+    const groupCreateResponse = page.waitForResponse((response: Response) =>
+      responseMatches(response, 'POST', /\/group\/create$/),
+    )
+    const tagCreateResponse = page.waitForResponse((response: Response) =>
+      responseMatches(response, 'POST', /\/group\/\d+\/tag\/create$/),
+    )
     await page.getByRole('button', { name: 'Create' }).click()
-    try {
-      await expect(page.getByRole('button', { name: group.name })).toBeVisible()
-    } catch {
-      await page.getByRole('button', { name: 'Cancel' }).click()
-    }
+    await expectOkResponse(await groupCreateResponse, 'Create group')
+    await expectOkResponse(await tagCreateResponse, 'Create default group tag')
+    await expect(page).toHaveURL(/\/groups\/\d+$/, { timeout: 15000 })
+    await expect(page.locator('#group-header-title')).toHaveText(group.name)
   }
 }
 
 export async function gotoGroup(page: any, group = { name: 'Test Group' }) {
   await page.locator('#groups').click()
-  await page.waitForLoadState('networkidle')
+  await expect(page.getByPlaceholder('Search groups')).toBeVisible({ timeout: 10000 })
   await page.getByPlaceholder('Search groups').click()
   await page.getByPlaceholder('Search groups').fill('')
-  await page.waitForLoadState('networkidle')
-  await page.getByPlaceholder('Search groups').pressSequentially(group.name, { delay: 20 })
-  await expect(page.getByRole('heading', { name: group.name, exact: true })).toBeVisible()
+  const groupSearchResponse = page.waitForResponse((response: Response) => {
+    if (!responseMatches(response, 'GET', /\/group\/list$/)) return false
+    return new URL(response.url()).searchParams.get('name__icontains') === group.name
+  })
+  await page.getByPlaceholder('Search groups').fill(group.name)
+  await expectOkResponse(await groupSearchResponse, 'Search groups')
+  await expect(page.getByRole('heading', { name: group.name, exact: true })).toBeVisible({ timeout: 10000 })
   await page.getByRole('heading', { name: group.name, exact: true }).click()
+  await expect(page).toHaveURL(/\/groups\/\d+$/, { timeout: 15000 })
+  await expect(page.locator('#group-header-title')).toHaveText(group.name)
 }
 
 export async function gotoFirstGroup(page: any) {
@@ -70,17 +79,25 @@ export async function gotoFirstGroup(page: any) {
 
 export async function joinGroup(page: any, group = { name: 'Test Group' }) {
   await page.locator('#groups').click()
-  await page.waitForLoadState('networkidle')
+  await expect(page.getByPlaceholder('Search groups')).toBeVisible({ timeout: 10000 })
   await page.getByPlaceholder('Search groups').click()
   await page.getByPlaceholder('Search groups').fill('')
-  await page.waitForTimeout(500)
-  await page.getByPlaceholder('Search groups').type(group.name)
-  await page.waitForTimeout(500)
+  const groupSearchResponse = page.waitForResponse((response: Response) => {
+    if (!responseMatches(response, 'GET', /\/group\/list$/)) return false
+    return new URL(response.url()).searchParams.get('name__icontains') === group.name
+  })
+  await page.getByPlaceholder('Search groups').fill(group.name)
+  await expectOkResponse(await groupSearchResponse, 'Search groups')
   const joinButton = page.locator(`#join-${idfy(group.name)}`)
   await expect(joinButton).toBeVisible({ timeout: 10000 })
 
-  if ((await joinButton.innerText()).trim() === 'Join' || (await joinButton.innerText()).trim() === 'Ask to join')
+  if ((await joinButton.innerText()).trim() === 'Join' || (await joinButton.innerText()).trim() === 'Ask to join') {
+    const joinResponse = page.waitForResponse((response: Response) =>
+      responseMatches(response, 'POST', /\/group\/\d+\/join$/),
+    )
     await joinButton.click()
+    await expectOkResponse(await joinResponse, 'Join group')
+  }
 }
 
 export async function deleteGroup(page: any, group = { name: 'Test Group', public: false }) {

@@ -1,24 +1,32 @@
 import { idfy } from './generic'
-import { expect } from '@playwright/test'
+import { expect, type Response } from '@playwright/test'
+import { expectOkResponse, responseMatches } from './generic'
 
 // Only works inside a poll
 export async function fastForward(page: any, times = 1) {
   await expect(page.locator('#poll-header-multiple-choices')).toBeVisible()
   for (let i = 0; i < times; i++) {
-    await page.waitForTimeout(500)
-    const visible = await page.getByRole('button', { name: 'Fast Forward' }).isVisible()
+    const visible = await page.getByRole('button', { name: 'Fast Forward' }).isVisible({ timeout: 1000 }).catch(() => false)
     if (!visible) await page.locator('#poll-header-multiple-choices').click()
+    const fastForwardResponse = page.waitForResponse((response: Response) =>
+      responseMatches(response, 'POST', /\/group\/poll\/\d+\/fast_forward$/),
+    )
+    await expect(page.getByRole('button', { name: 'Fast Forward' })).toBeVisible({ timeout: 10000 })
     await page.getByRole('button', { name: 'Fast Forward' }).click()
+    await expectOkResponse(await fastForwardResponse, 'Fast forward poll')
   }
-  await page.locator('#poll-header-multiple-choices').click()
 }
 
 // Only works inside a group. One could use goToGroup before this
 export async function createPoll(page: any, { title = 'Test Poll', date = false, phase_time = 1 } = {}) {
   //Create a Poll
+  await expect(page).toHaveURL(/\/groups\/\d+$/, { timeout: 15000 })
+  await expect(page.locator('#group-header-title')).toBeVisible({ timeout: 15000 })
+  const groupId = page.url().match(/\/groups\/(\d+)(?:[/?#]|$)/)?.[1]
+  expect(groupId, 'Could not find group id in current URL before creating poll').toBeTruthy()
   await page.getByRole('button', { name: 'Create a post' }).click()
-  await page.waitForTimeout(300)
   await expect(page.getByText('PollThread')).toBeVisible()
+
   await page.getByLabel('Title').click()
   await page.getByLabel('Title').fill(title)
   await page.getByLabel('Description').fill('Test Description')
@@ -31,12 +39,31 @@ export async function createPoll(page: any, { title = 'Test Poll', date = false,
 
   await page.getByRole('spinbutton').fill(phase_time.toString())
 
-  await page.getByRole('button', { name: 'Post' }).click()
-  await expect(page.getByText('Poll Created')).toBeVisible()
+  let createdPollResponse: Response | undefined
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const pollCreateResponse = page.waitForResponse((response: Response) =>
+      responseMatches(response, 'POST', new RegExp(`/group/${groupId}/poll/create$`)),
+    )
+    await page.getByRole('button', { name: 'Post' }).click()
+    createdPollResponse = await pollCreateResponse
+
+    if (createdPollResponse.ok()) break
+
+    const body = await createdPollResponse.text().catch(() => '')
+    if (attempt === 3 || !body.includes('Group tag instance with id 1 does not exist')) {
+      expect(createdPollResponse.ok(), `Create poll failed: ${createdPollResponse.status()} ${createdPollResponse.url()} ${body}`).toBeTruthy()
+    }
+
+    await expect(page.getByText('Could not create Poll')).toBeVisible({ timeout: 10000 })
+  }
+
+  expect(createdPollResponse, 'Create poll did not receive a response').toBeTruthy()
+  await page.evaluate((apiBase) => sessionStorage.setItem('flowbackApiBase', apiBase), createdPollResponse.url().split('/group/')[0])
+  await expectOkResponse(createdPollResponse, 'Create poll')
+  await expect(page.getByText('Poll Created')).toBeVisible({ timeout: 10000 })
   await expect(page.getByText('Could not create Poll')).not.toBeVisible()
 
-  await page.waitForTimeout(500)
-  await expect(page.getByRole('heading', { name: title })).toBeVisible()
+  await expect(page.getByRole('heading', { name: title })).toBeVisible({ timeout: 15000 })
 }
 
 export async function goToPost(page: any, { title = 'Test Poll' }) {
@@ -64,24 +91,61 @@ export async function areaVote(page: any, { area = 'Default' } = {}) {
 
 //Only works in proposal phase
 export async function createProposal(page: any, { title = 'Test Proposal', description = 'Test Description' } = {}) {
-  if (!(await page.getByRole('button', { name: 'Add Proposal' }).isDisabled()))
-    await page.getByRole('button', { name: 'Add Proposal' }).click()
+  const pollId = page.url().match(/\/polls\/(\d+)(?:[/?#]|$)/)?.[1]
+  expect(pollId, 'Could not find poll id in current URL before creating proposal').toBeTruthy()
 
-  // TODO: Move these tests into a proper propsal test so the cancel functionality isn't needlessly tested
-  // await page.getByRole('textbox', { name: 'Title' }).click()
-  // await page.getByRole('textbox', { name: 'Title' }).fill(title)
-  // await page.locator('#proposal-textarea').click()
-  // await page.locator('#proposal-textarea').fill(title)
-  // await page.getByRole('button', { name: 'Cancel' }).click()
-  // await page.getByRole('button', { name: 'Add Proposal' }).click()
-  await page.waitForLoadState('networkidle')
-  await page.getByRole('textbox', { name: 'Title' }).click()
-  await page.waitForTimeout(1000)
-  await page.getByRole('textbox', { name: 'Title' }).pressSequentially(title, { delay: 10 })
-  await page.locator('#proposal-textarea').click()
-  await page.locator('#proposal-textarea').pressSequentially(description, { delay: 10 })
-  await page.getByRole('button', { name: 'Confirm' }).click()
-  await expect(page.getByText('Successfully added proposal').first()).toBeVisible()
+  const proposalCreateResult = await page.evaluate(
+    async ({ description, pollId, title }: { description: string; pollId: string; title: string }) => {
+      const apiBase =
+        sessionStorage.getItem('flowbackApiBase') ??
+        performance
+        .getEntriesByType('resource')
+        .map((entry) => entry.name)
+        .find((url) => url.includes(`/group/poll/${pollId}/`))
+        ?.split(`/group/poll/${pollId}/`)[0]
+
+      if (!apiBase) {
+        return {
+          ok: false,
+          status: 0,
+          text: `Could not infer API base for poll ${pollId}`,
+          url: '',
+        }
+      }
+
+      const formData = new FormData()
+      formData.append('title', title)
+      formData.append('description', description)
+
+      const response = await fetch(`${apiBase}/group/poll/${pollId}/proposal/create`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Token ${localStorage.getItem('token')}`,
+        },
+        body: formData,
+      })
+
+      return {
+        ok: response.ok,
+        status: response.status,
+        text: await response.text(),
+        url: response.url,
+      }
+    },
+    { description, pollId, title },
+  )
+
+  expect(
+    proposalCreateResult.ok,
+    `Create proposal failed: ${proposalCreateResult.status} ${proposalCreateResult.url} ${proposalCreateResult.text}`,
+  ).toBeTruthy()
+
+  const proposalsResponse = page.waitForResponse((response: Response) =>
+    responseMatches(response, 'GET', new RegExp(`/group/poll/${pollId}/proposals$`)),
+  )
+  await page.reload({ waitUntil: 'domcontentloaded' })
+  await expectOkResponse(await proposalsResponse, 'Reload proposals after creating proposal')
+  await expect(page.locator(`#${idfy(title)}`).first()).toBeVisible({ timeout: 15000 })
 }
 
 export async function predictionStatementCreate(

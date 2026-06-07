@@ -1,6 +1,6 @@
-import { expect } from '@playwright/test'
+import { expect, type Response } from '@playwright/test'
 import { gotoGroup } from './group'
-import { idfy } from './generic'
+import { expectOkResponse, idfy, responseMatches } from './generic'
 
 export async function createPermission(
     page: any,
@@ -11,7 +11,7 @@ export async function createPermission(
     try {
         await expect(page.getByRole('heading', { name: 'Admin Settings' })).toBeVisible()
     } catch {
-        gotoGroup(page, group)
+        await gotoGroup(page, group)
         await page.getByRole('button', { name: 'Edit Group' }).click()
     }
     // Create, deactive and delete permission
@@ -31,8 +31,8 @@ export async function assignPermission(
     permission_name = 'Test Permission',
     user_name = '',
 ) {
-    if (!page.getByRole('heading', { name: 'Admin Settings' }).isVisible()) {
-        gotoGroup(page, group)
+    if (!(await page.getByRole('heading', { name: 'Admin Settings' }).isVisible().catch(() => false))) {
+        await gotoGroup(page, group)
         await page.getByRole('button', { name: 'Edit Group' }).click()
     }
 
@@ -45,10 +45,14 @@ export async function assignPermission(
     await expect(addRoleButton).toBeVisible()
     await addRoleButton.click()
 
+    const updatePermissionResponse = page.waitForResponse((response: Response) =>
+        responseMatches(response, 'POST', /\/group\/\d+\/user\/update$/),
+    )
     await page
         .getByRole('listitem')
         .locator(`#permission-${idfy(permission_name)}-${idfy(user_name)}`)
         .click()
+    await expectOkResponse(await updatePermissionResponse, 'Assign group permission')
 
     await expect(page.getByText('Successfully updated permission')).toBeVisible()
 }
