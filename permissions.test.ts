@@ -1,11 +1,11 @@
-import test, { expect } from '@playwright/test'
+import test, { expect } from './fixtures'
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group'
-import { login, newWindow, randomString } from './generic'
+import { login, newWindow, randomString, loginAsNewUser, createUser } from './generic'
 import { assignPermission, createPermission } from './permission'
 import 'dotenv/config'
 
-test('Create-Permission-Full', async ({ page }) => {
-    await login(page)
+test('Create-Permission-Full', async ({ page, user }) => {
+    await login(page, user)
 
     const rand = Math.random().toString(36).slice(2, 10)
     const group = { name: 'Test Group Permissions ' + rand, public: true }
@@ -25,11 +25,11 @@ test('Create-Permission-Full', async ({ page }) => {
 
     const bPage = await newWindow()
 
-    await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
+    const userB = await loginAsNewUser(bPage)
     await joinGroup(bPage, group)
     await page.waitForTimeout(400)
 
-    await assignPermission(page, group, permission_name, process.env.SECONDUSER_NAME)
+    await assignPermission(page, group, permission_name, userB.username)
 
     await page.waitForTimeout(300)
 
@@ -42,8 +42,8 @@ test('Create-Permission-Full', async ({ page }) => {
     await deleteGroup(page, group)
 })
 
-test('Create-Permission-None', async ({ page }) => {
-    await login(page)
+test('Create-Permission-None', async ({ page, user }) => {
+    await login(page, user)
 
     const group = { name: 'Test Group Permissions ' + randomString(), public: true }
     await createGroup(page, group)
@@ -52,7 +52,7 @@ test('Create-Permission-None', async ({ page }) => {
 
     const bPage = await newWindow()
 
-    await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
+    const userB = await loginAsNewUser(bPage)
     await joinGroup(bPage, group)
 
     await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click')
@@ -61,7 +61,7 @@ test('Create-Permission-None', async ({ page }) => {
     await createPermission(page, group, [], permission_name)
 
     await page.waitForTimeout(1000)
-    await assignPermission(page, group, permission_name, process.env.SECONDUSER_NAME)
+    await assignPermission(page, group, permission_name, userB.username)
 
     await page.waitForTimeout(500)
     await gotoGroup(bPage, group)

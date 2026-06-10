@@ -31,28 +31,19 @@ export async function assignPermission(
     permission_name = 'Test Permission',
     user_name = '',
 ) {
-    if (!(await page.getByRole('heading', { name: 'Admin Settings' }).isVisible().catch(() => false))) {
-        await gotoGroup(page, group)
-        await page.getByRole('button', { name: 'Edit Group' }).click()
-    }
+    // Always (re)open the Assign panel from a fresh group load. The Assign
+    // component fetches its member list once on mount, so if it was opened
+    // earlier in the edit session (before the target user joined) the list is
+    // stale. A fresh navigation guarantees the just-joined user is present.
+    await gotoGroup(page, group)
+    await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click')
+    await expect(page.getByRole('heading', { name: 'Admin Settings' })).toBeVisible()
 
     await page.getByRole('button', { name: 'Permissions' }).click()
     await page.getByRole('button', { name: 'Assign' }).click()
 
     const addRoleButton = page.locator(`#plus-${idfy(user_name)}`)
-
-    // Member list may not include the user yet if they just joined — reload and retry
-    for (let attempt = 0; attempt < 3; attempt++) {
-        if (await addRoleButton.isVisible({ timeout: 5000 }).catch(() => false)) break
-        if (attempt === 2) {
-            await expect(addRoleButton).toBeVisible()
-            break
-        }
-        await page.reload({ waitUntil: 'domcontentloaded' })
-        await expect(page.getByRole('heading', { name: 'Admin Settings' })).toBeVisible()
-        await page.getByRole('button', { name: 'Permissions' }).click()
-        await page.getByRole('button', { name: 'Assign' }).click()
-    }
+    await expect(addRoleButton).toBeVisible({ timeout: 15000 })
     await addRoleButton.click()
 
     const updatePermissionResponse = page.waitForResponse((response: Response) =>

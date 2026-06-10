@@ -1,5 +1,5 @@
-import test, { expect } from '@playwright/test'
-import { login, newWindow, randomString } from './generic'
+import test, { expect } from './fixtures'
+import { login, newWindow, randomString, loginAsNewUser, createUser } from './generic'
 import { createArea, createGroup, gotoGroup, joinGroup } from './group'
 import {
   areaVote,
@@ -13,11 +13,11 @@ import {
 } from './poll'
 import { assignPermission, createPermission } from './permission'
 
-test('Imac-Test', async ({ page }) => {
+test('Imac-Test', async ({ page, user }) => {
   test.skip()
   test.setTimeout(195000)
 
-  await login(page)
+  await login(page, user)
 
   let group = { name: 'Test Group Imac' + randomString(), public: true }
 
@@ -68,12 +68,12 @@ test('Imac-Test', async ({ page }) => {
   // await expect(page.getByText('Successfully evaluated')).toBeVisible();
 })
 
-test('Imac-Test-2-Users', async ({ page }) => {
+test('Imac-Test-2-Users', async ({ page, user }) => {
   test.skip()
   // test.setTimeout(100000);
   test.setTimeout(100000)
 
-  await login(page)
+  await login(page, user)
 
   let group = { name: 'Test Group 2 Imac ' + randomString(), public: true }
 
@@ -84,7 +84,7 @@ test('Imac-Test-2-Users', async ({ page }) => {
 
   const bPage = await newWindow()
 
-  await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
+  const userB = await loginAsNewUser(bPage)
   await joinGroup(bPage, group)
 
   const permission_name = 'Consequence voting ' + randomString()

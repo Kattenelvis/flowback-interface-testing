@@ -5,6 +5,7 @@ export type group = {
   name: string
   public?: boolean
   invite?: boolean
+  id?: number
 }
 
 export async function createGroup(page: any, group: group = { name: 'Test Group', public: false, invite: false }) {
@@ -48,14 +49,28 @@ export async function createGroup(page: any, group: group = { name: 'Test Group'
       responseMatches(response, 'POST', /\/group\/\d+\/tag\/create$/),
     )
     await page.getByRole('button', { name: 'Create' }).click()
-    await expectOkResponse(await groupCreateResponse, 'Create group')
+    const createResponse = await groupCreateResponse
+    await expectOkResponse(createResponse, 'Create group')
     await expectOkResponse(await tagCreateResponse, 'Create default group tag')
     await expect(page).toHaveURL(/\/groups\/\d+$/, { timeout: 15000 })
     await expect(page.locator('#group-header-title')).toHaveText(group.name)
+    // Capture the real group id so later navigation is by id, not a racy
+    // substring search over the (shared) group list.
+    const url = new URL(page.url())
+    const idFromUrl = Number(url.pathname.match(/\/groups\/(\d+)/)?.[1])
+    group.id = Number.isFinite(idFromUrl) ? idFromUrl : group.id
   }
 }
 
-export async function gotoGroup(page: any, group = { name: 'Test Group' }) {
+export async function gotoGroup(page: any, group: { name: string; id?: number } = { name: 'Test Group' }) {
+  // Fast, race-free path: navigate straight to the group by id.
+  if (group.id) {
+    await page.goto(`${process.env.LINK}/groups/${group.id}`, { waitUntil: 'domcontentloaded' })
+    await expect(page).toHaveURL(/\/groups\/\d+$/, { timeout: 30000 })
+    await expect(page.locator('#group-header-title')).toHaveText(group.name, { timeout: 30000 })
+    return
+  }
+
   await page.locator('#groups').click()
   await expect(page.getByPlaceholder('Search groups')).toBeVisible({ timeout: 10000 })
 

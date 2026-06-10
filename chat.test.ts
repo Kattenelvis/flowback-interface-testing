@@ -1,11 +1,11 @@
-import { test, expect, firefox, chromium } from '@playwright/test'
+import { test, expect, firefox, chromium } from './fixtures'
 import { login, newWindow, randomString, register } from './generic'
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group'
 import 'dotenv/config'
 
-test('Group-Chat', async ({ page }) => {
+test('Group-Chat', async ({ page, user }) => {
   test.skip()
-  await login(page)
+  await login(page, user)
 
   const group = { name: 'test-group-chat' + randomString(), public: true }
 
@@ -55,9 +55,9 @@ test('Group-Chat', async ({ page }) => {
   await deleteGroup(page, group)
 })
 
-test('Direct-Chat-Via-Group', async ({ page }) => {
+test('Direct-Chat-Via-Group', async ({ page, user }) => {
   test.skip()
-  await login(page)
+  await login(page, user)
 
   const group = { name: 'Test Group Chat 2' + randomString(), public: true }
 
@@ -98,9 +98,9 @@ test('Direct-Chat-Via-Group', async ({ page }) => {
   await deleteGroup(page, group)
 })
 
-test('Workgroup-Chat', async ({ page }) => {
+test('Workgroup-Chat', async ({ page, user }) => {
   test.skip()
-  await login(page)
+  await login(page, user)
 
   const group = {
     name: 'Test Group Chat Workgroup' + randomString(),
@@ -158,9 +158,9 @@ test('Workgroup-Chat', async ({ page }) => {
 })
 
 // TODO Fix this, will require finessing with registring new users
-test('Group-Chat-Creation', async ({ page }) => {
+test('Group-Chat-Creation', async ({ page, user }) => {
   test.skip()
-  await login(page)
+  await login(page, user)
 
   // Testing error functionality
   await page.getByRole('button', { name: 'open chat' }).click()

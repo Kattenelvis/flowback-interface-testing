@@ -1,0 +1,83 @@
+# Self-contained isolated stack for the interface tests.
+# Frontend + backend are built from local source (the published kattenelvis1
+# images diverge: email login vs the username login the tests target).
+# Single origin via Caddy on http://localhost:8085  ->  LINK for tests.
+name: flowback-local
+
+services:
+  postgresql:
+    image: postgres:16.2
+    user: postgres
+    environment:
+      POSTGRES_USER: flowback
+      POSTGRES_PASSWORD: flowback
+      POSTGRES_DB: flowback
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U flowback"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:5
+
+  backend:
+    build:
+      context: ../flowback-backend
+    image: flowback-backend:local
+    command: bash -c "python manage.py migrate && python manage.py runserver
+      0.0.0.0:8000"
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    ports:
+      - 8000:8000
+    environment:
+      FLOWBACK_PSQL_NAME: flowback
+      FLOWBACK_PSQL_USER: flowback
+      FLOWBACK_PSQL_PASSWORD: flowback
+      FLOWBACK_PSQL_HOST: postgresql
+      FLOWBACK_PSQL_PORT: 5432
+      FLOWBACK_REDIS_HOST: redis
+      URL_SUBPATH: api
+      FLOWBACK_POLL_VERSION_LOCK: 2
+      DEBUG: "True"
+      DEBUG_REGISTER_BYPASS_EMAIL_VERIFICATION: "True"
+      EMAIL_HOST: ""
+
+  celery-worker:
+    image: flowback-backend:local
+    command: celery -A backend worker --loglevel=warning
+    depends_on:
+      - redis
+    environment:
+      FLOWBACK_PSQL_NAME: flowback
+      FLOWBACK_PSQL_USER: flowback
+      FLOWBACK_PSQL_PASSWORD: flowback
+      FLOWBACK_PSQL_HOST: postgresql
+      FLOWBACK_PSQL_PORT: 5432
+      FLOWBACK_REDIS_HOST: redis
+
+  celery-beat:
+    image: flowback-backend:local
+    command: celery -A backend beat --loglevel=warning
+    depends_on:
+      - redis
+    environment:
+      FLOWBACK_PSQL_NAME: flowback
+      FLOWBACK_PSQL_USER: flowback
+      FLOWBACK_PSQL_PASSWORD: flowback
+      FLOWBACK_PSQL_HOST: postgresql
+      FLOWBACK_PSQL_PORT: 5432
+      FLOWBACK_REDIS_HOST: redis
+
+  frontend:
+    image: flowback-frontend:local
+    depends_on:
+      - backend
+    ports:
+      - 3000:3000
+    environment:
+      PORT: 3000
+      PUBLIC_API_URL: http://localhost:8085/api
+      PUBLIC_POLL_VERSION: 2

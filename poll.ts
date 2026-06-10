@@ -223,7 +223,7 @@ export async function vote(page: any, proposal = { title: 'Proposal Title', vote
   const voteResponse = page.waitForResponse(
     (response: Response) =>
       responseMatches(response, 'POST', /\/group\/poll\/\d+\/proposal\/vote\/(update|delegate\/update)$/),
-    { timeout: 15000 },
+    { timeout: 30000 },
   )
   await trackContainer.click({ position: { x: xOffset, y: yOffset } })
   await expectOkResponse(await voteResponse, `Vote on "${proposal.title}" = ${proposal.vote}`)

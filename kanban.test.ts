@@ -1,9 +1,26 @@
-import { test, expect } from '@playwright/test'
+import { test, expect } from './fixtures'
 import { login, randomString } from './generic'
 import { createGroup } from './group'
 
-test('Kanban-User', async ({ page }) => {
-  await login(page)
+// Creates a kanban entry in the personal "Done" lane so edit/delete tests are
+// self-contained (each test has its own freshly registered user).
+async function addPersonalDoneEntry(page: any) {
+  await page.goto(`${process.env.LINK}/kanban`)
+  await expect(page).toHaveURL(`${process.env.LINK}/kanban`)
+  await expect(page.locator('#kanban-board')).toBeVisible()
+  const doneButton = page.locator('#Done-add')
+  await expect(doneButton).toBeVisible()
+  await doneButton.click()
+  const createModal = page.locator('#create-kanban-entry-modal')
+  await expect(createModal).toBeVisible()
+  await page.locator('#create-kanban-text').fill('test kanban')
+  await page.locator('#create-kanban-textarea').fill('test kanban description')
+  await page.locator('button', { hasText: 'Confirm' }).click()
+  await expect(createModal).toBeHidden()
+}
+
+test('Kanban-User', async ({ page, user }) => {
+  await login(page, user)
 
   // Navigate to the kanban page
   await page.goto(`${process.env.LINK}/kanban`)
@@ -27,8 +44,8 @@ test('Kanban-User', async ({ page }) => {
   await expect(createModal).toBeHidden()
 })
 
-test('Kanban-Group', async ({ page }) => {
-  await login(page)
+test('Kanban-Group', async ({ page, user }) => {
+  await login(page, user)
 
   // await gotoGroup(page);
   await createGroup(page, {
@@ -59,20 +76,9 @@ test('Kanban-Group', async ({ page }) => {
   await expect(createModal).toBeHidden()
 })
 
-test('Kanban-Edit', async ({ page }) => {
-  await login(page)
-
-  // Navigate to the kanban page
-  await page.goto(`${process.env.LINK}/kanban`)
-  await expect(page).toHaveURL(`${process.env.LINK}/kanban`)
-
-  // Check if the kanban board is visible
-  const kanbanBoard = await page.locator('#kanban-board')
-  await expect(kanbanBoard).toBeVisible()
-
-  //n-th member of done-kanban-lane
-  const doneLane = await page.locator('#Done-kanban-lane')
-  await page.waitForTimeout(1000)
+test('Kanban-Edit', async ({ page, user }) => {
+  await login(page, user)
+  await addPersonalDoneEntry(page)
 
   const kanbanEntry = page.locator('#Done-kanban-lane > ul > div').first()
   await expect(kanbanEntry).toBeVisible()
@@ -103,20 +109,9 @@ test('Kanban-Edit', async ({ page }) => {
   await expect(kanbanEntryModal).toBeHidden()
 })
 
-test('Kanban-Delete', async ({ page }) => {
-  await login(page)
-
-  // Navigate to the kanban page
-  await page.goto(`${process.env.LINK}/kanban`)
-  await expect(page).toHaveURL(`${process.env.LINK}/kanban`)
-
-  // Check if the kanban board is visible
-  const kanbanBoard = await page.locator('#kanban-board')
-  await expect(kanbanBoard).toBeVisible()
-
-  //n-th member of done-kanban-lane
-  const doneLane = await page.locator('#Done-kanban-lane')
-  await page.waitForTimeout(1000)
+test('Kanban-Delete', async ({ page, user }) => {
+  await login(page, user)
+  await addPersonalDoneEntry(page)
 
   const kanbanEntry = page.locator('#Done-kanban-lane > ul > div').first()
   await expect(kanbanEntry).toBeVisible()
@@ -132,6 +127,12 @@ test('Kanban-Delete', async ({ page }) => {
   const deleteButton = await page.locator('#Delete')
   await expect(deleteButton).toBeVisible()
 
+  const deleteResponse = page.waitForResponse(
+    (response) => response.url().includes('/user/kanban/entry/delete') && response.status() === 200,
+  )
   await deleteButton.click()
-  await expect(kanbanEntryModal).toBeHidden()
+  await deleteResponse
+  // Deletion succeeded: after a reload the lane has no entries.
+  await page.reload()
+  await expect(page.locator('#Done-kanban-lane > ul > div')).toHaveCount(0)
 })

@@ -1,12 +1,12 @@
-import test from '@playwright/test'
+import { test } from './fixtures'
 import { login, logout, loginEnter, register } from './generic'
 
-test('Login', async ({ page }) => {
-  await login(page)
+test('Login', async ({ page, user }) => {
+  await login(page, user)
 })
 
-test('Login-Enter', async ({ page }) => {
-  await loginEnter(page)
+test('Login-Enter', async ({ page, user }) => {
+  await loginEnter(page, user)
 })
 
 // TODO: Use automated email testing
@@ -15,7 +15,7 @@ test('Register', async ({ page }) => {
   await register(page)
 })
 
-test('Logout', async ({ page }) => {
-  await login(page)
+test('Logout', async ({ page, user }) => {
+  await login(page, user)
   await logout(page)
 })

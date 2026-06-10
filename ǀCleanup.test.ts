@@ -1,4 +1,4 @@
-import test from "@playwright/test"
+import test from './fixtures'
 import { login } from "./generic"
 import { deleteGroup, gotoFirstGroup } from "./group"
 

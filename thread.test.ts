@@ -1,12 +1,12 @@
-import test, { expect } from '@playwright/test'
+import test, { expect } from './fixtures'
 import { login, randomString } from './generic'
 import { createGroup, gotoGroup } from './group'
 import { createThread } from './thread'
 
 const group = { name: 'Test Group Thread' + randomString(), public: false }
 
-test('Thread-Create', async ({ page }) => {
-  await login(page)
+test('Thread-Create', async ({ page, user }) => {
+  await login(page, user)
 
   await createGroup(page, group)
 
@@ -15,8 +15,8 @@ test('Thread-Create', async ({ page }) => {
   await createThread(page, group)
 })
 
-test('Thread-Comments', async ({ page }) => {
-  await login(page)
+test('Thread-Comments', async ({ page, user }) => {
+  await login(page, user)
 
   await createGroup(page, group)
 
@@ -39,8 +39,8 @@ test('Thread-Comments', async ({ page }) => {
   // TODO Test likes
 })
 
-test('Thread-Create-Report-Delete', async ({ page }) => {
-  await login(page)
+test('Thread-Create-Report-Delete', async ({ page, user }) => {
+  await login(page, user)
 
   const group = { name: 'Test Group Thread' + randomString(), public: false }
 

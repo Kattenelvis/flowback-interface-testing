@@ -1,5 +1,5 @@
-import { test, chromium, expect, type Response } from '@playwright/test'
-import { login, newWindow, randomString, register, responseMatches } from './generic'
+import { test, chromium, expect, type Response } from './fixtures'
+import { login, newWindow, randomString, register, responseMatches, loginAsNewUser, createUser } from './generic'
 import { createPoll, createProposal, fastForward, goToPost, vote } from './poll'
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group'
 import { becomeDelegate, delegateToUser } from './delegation'
@@ -7,8 +7,8 @@ import { idfy } from './generic'
 import 'dotenv/config'
 import { assignPermission, createPermission } from './permission'
 
-test('Become-Delegate', async ({ page }) => {
-  await login(page)
+test('Become-Delegate', async ({ page, user }) => {
+  await login(page, user)
 
   const group = { name: 'Test Group Delegation ' + randomString(), public: true }
 
@@ -19,9 +19,9 @@ test('Become-Delegate', async ({ page }) => {
   await becomeDelegate(page, group)
 })
 
-test('Delegation-Poll', async ({ page }) => {
+test('Delegation-Poll', async ({ page, user }) => {
   test.setTimeout(120000)
-  await login(page)
+  await login(page, user)
 
   const group = { name: 'Test Group Delegation' + randomString(), public: true }
 
@@ -33,7 +33,7 @@ test('Delegation-Poll', async ({ page }) => {
 
   await becomeDelegate(page, group)
 
-  await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
+  const userB = await loginAsNewUser(bPage)
   await joinGroup(bPage, group)
 
   await page.waitForTimeout(1000)
@@ -52,7 +52,7 @@ test('Delegation-Poll', async ({ page }) => {
   //Give b voting rights
   const permission_name = 'Test Permission' + randomString()
   await createPermission(page, group, [2], permission_name)
-  await assignPermission(page, group, permission_name, process.env.SECONDUSER_NAME)
+  await assignPermission(page, group, permission_name, userB.username)
 
   await gotoGroup(page, group)
 
@@ -79,9 +79,9 @@ test('Delegation-Poll', async ({ page }) => {
   // await expect(page.locator(`#track-container-${idfy(proposal.title)}`)).not.toContainClass('disabled')
 })
 
-test('Delegate-History', async ({ page }) => {
+test('Delegate-History', async ({ page, user }) => {
   test.setTimeout(120000)
-  await login(page)
+  await login(page, user)
 
   const group = { name: 'Test Group Delegate History ' + randomString(), public: true }
 
@@ -140,9 +140,9 @@ test('Delegate-History', async ({ page }) => {
   await expect(page).toHaveURL(/source=delegate-history/)
 })
 
-test('Delegation-Override-Results', async ({ page }) => {
+test('Delegation-Override-Results', async ({ page, user }) => {
   test.setTimeout(300000)
-  await login(page)
+  await login(page, user)
 
   const group = { name: 'Test Group Delegation Override ' + randomString(), public: true }
   const poll = { title: 'Test Poll Delegation Override ' + randomString() }
@@ -154,9 +154,9 @@ test('Delegation-Override-Results', async ({ page }) => {
   const cPage = await newWindow()
   const dPage = await newWindow()
 
-  await login(cPage, { username: process.env.THIRDUSER_NAME, password: process.env.THIRDUSER_PASS })
-  await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
-  await login(dPage, { username: process.env.FOURTHUSER_NAME, password: process.env.FOURTHUSER_PASS })
+  const userC = await loginAsNewUser(cPage)
+  const userB = await loginAsNewUser(bPage)
+  const userD = await loginAsNewUser(dPage)
 
   await createGroup(page, group)
 
@@ -174,7 +174,7 @@ test('Delegation-Override-Results', async ({ page }) => {
   await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click')
   const emptyPermission = 'No Voting ' + randomString()
   await createPermission(page, group, [], emptyPermission)
-  await assignPermission(page, group, emptyPermission, process.env.FOURTHUSER_NAME)
+  await assignPermission(page, group, emptyPermission, userD.username)
 
   await gotoGroup(page, group)
   await createPoll(page, poll)

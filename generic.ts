@@ -1,15 +1,72 @@
-import { chromium, expect, type Response } from '@playwright/test'
+import { chromium, expect, request as playwrightRequest, type Browser, type Response } from '@playwright/test'
 import 'dotenv/config'
 
 export const idfy = (text: string) => {
   return text.trim().replace(/\s+/g, '-').toLowerCase()
 }
 
+// Extra "users" are modelled as isolated browser CONTEXTS inside a single
+// shared browser per worker — not a fresh browser per call. Launching a full
+// Chromium for every newWindow() caused a launch storm under 10 workers
+// (10 workers x several windows) and resource-exhaustion flakiness. Contexts
+// are cheap and still fully isolated (separate cookies/localStorage).
+let _sharedBrowser: Browser | null = null
+let _testBrowser: Browser | null = null
+const _openContexts: import('@playwright/test').BrowserContext[] = []
+
+// fixtures.ts sets the current test's Playwright-managed browser so newWindow()
+// reuses it (one browser per worker, robustly managed) instead of launching its
+// own. Falls back to a self-launched browser if not set.
+export function setTestBrowser(browser: Browser | null) {
+  _testBrowser = browser
+}
+
 export async function newWindow() {
-  const browser = await chromium.launch()
-  const Context = await browser.newContext()
-  const Page = await Context.newPage()
-  return Page
+  const browser = _testBrowser ?? (_sharedBrowser ??= await chromium.launch())
+  const context = await browser.newContext()
+  _openContexts.push(context)
+  return await context.newPage()
+}
+
+// Closes the contexts opened during a test (called from the afterEach hook in
+// fixtures.ts). The shared browser is left running and reused across tests in
+// the worker; it is torn down when the worker process exits.
+export async function closeWindows() {
+  await Promise.all(_openContexts.splice(0).map((c) => c.close().catch(() => { })))
+}
+
+export const TEST_PASS = process.env.TEST_PASS ?? 'SecretPassword123123!'
+
+export type TestUser = { username: string; password: string; email: string }
+
+// Registers a brand-new user directly via the API (fast, no UI flow) so every
+// test gets isolated accounts. Relies on the backend running with
+// DEBUG_REGISTER_BYPASS_EMAIL_VERIFICATION=True, which returns the verification
+// code in the register response.
+export async function createUser(): Promise<TestUser> {
+  const username = `u${randomString()}${randomString()}`
+  const email = `${username}@flowback.test`
+  const ctx = await playwrightRequest.newContext({ baseURL: process.env.BACKEND_LINK })
+  try {
+    const reg = await ctx.post('/api/register', { data: { email } })
+    if (!reg.ok()) throw new Error(`register failed: ${reg.status()} ${await reg.text()}`)
+    const verification_code = (await reg.json()) as string
+    const verify = await ctx.post('/api/register/verify', {
+      data: { username, verification_code, password: TEST_PASS },
+    })
+    if (!verify.ok()) throw new Error(`register/verify failed: ${verify.status()} ${await verify.text()}`)
+  } finally {
+    await ctx.dispose()
+  }
+  return { username, password: TEST_PASS, email }
+}
+
+// Registers a fresh user and logs them in on the given page. Returns the user
+// so the caller can reference its (unique) username for invites/permissions.
+export async function loginAsNewUser(page: any): Promise<TestUser> {
+  const user = await createUser()
+  await login(page, user)
+  return user
 }
 
 export function responseMatches(response: Response, method: 'GET' | 'POST', path: RegExp) {

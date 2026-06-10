@@ -1,17 +1,17 @@
-import { test, chromium, expect } from '@playwright/test'
-import { login, newWindow, randomString } from './generic'
+import { test, chromium, expect } from './fixtures'
+import { login, newWindow, randomString, loginAsNewUser, createUser } from './generic'
 import { createGroup, gotoGroup, joinGroup } from './group'
 import { createPoll, fastForward, results } from './poll'
 import { Group, Poll } from './types'
 import { env } from 'process'
 
-test('Group-Notification', async ({ page }) => {
+test('Group-Notification', async ({ page, user }) => {
   const group: Group = { name: 'GroupTesting' + randomString(), public: true }
-  await login(page)
+  await login(page, user)
   await createGroup(page, group)
 
   const bPage = await newWindow()
-  await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
+  const userB = await loginAsNewUser(bPage)
 
   await joinGroup(bPage, group)
   await gotoGroup(bPage, group)
@@ -30,21 +30,23 @@ test('Group-Notification', async ({ page }) => {
 
   // TOOD: Once notification system is done, set an expect here to get the right message and that the notification link leads to the right poll
 
+  // The poll creator is not subscribed, so receives no "new poll" notification;
+  // the subscribed member (userB) receives exactly one.
   await page.locator('#notifications-list').click()
-  await expect(page.getByRole('button', { name: 'A new poll has been posted' }).nth(1)).not.toBeVisible()
+  await expect(page.getByRole('button', { name: 'A new poll has been posted' }).nth(0)).not.toBeVisible()
 
   await bPage.locator('#notifications-list').click()
-  await expect(bPage.getByRole('button', { name: 'A new poll has been posted' }).nth(1)).toBeVisible()
+  await expect(bPage.getByRole('button', { name: 'A new poll has been posted' }).nth(0)).toBeVisible()
 })
 
 // TODO: Move this into another test such as Poll-Start-To-Finish or Group-Notification
 // TODO: Add more group notification tests
-test('Poll-Start-To-Finish-Notification', async ({ page }) => {
+test('Poll-Start-To-Finish-Notification', async ({ page, user }) => {
   test.setTimeout(120000)
-  await login(page)
+  await login(page, user)
 
   const bPage = await newWindow()
-  await login(bPage, { username: env.SECONDUSER_NAME, password: env.SECONDUSER_PASS })
+  const userB = await loginAsNewUser(bPage)
 
   const group = { name: 'Test Poll start to finish notifications' + randomString(), public: true }
   await createGroup(page, group)

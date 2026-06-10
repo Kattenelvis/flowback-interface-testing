@@ -1,4 +1,4 @@
-import { test, expect, type Response } from '@playwright/test'
+import { test, expect, type Response } from './fixtures'
 import {
   areaVote,
   createPoll,
@@ -10,7 +10,7 @@ import {
   results,
   vote,
 } from './poll'
-import { expectOkResponse, login, newWindow, randomString, idfy, responseMatches } from './generic'
+import { expectOkResponse, login, newWindow, randomString, idfy, responseMatches, loginAsNewUser, createUser, type TestUser } from './generic'
 import { gotoGroup, createArea, createGroup, joinGroup } from './group'
 import 'dotenv/config'
 
@@ -18,9 +18,14 @@ test.describe('Basic-Post-Integration-Tests', () => {
   test.describe.configure({ mode: 'serial' })
   const group = { name: 'Test Group Poll' + randomString(), public: false }
   const poll = { title: 'Test Poll Create and Go ' + randomString(), date: false }
+  // Serial block shares one owner across its tests.
+  let owner: TestUser
+  test.beforeAll(async () => {
+    owner = await createUser()
+  })
 
   test('Create-Post', async ({ page }) => {
-    await login(page)
+    await login(page, owner)
 
     await createGroup(page, group)
     //Random poll name
@@ -28,7 +33,7 @@ test.describe('Basic-Post-Integration-Tests', () => {
   })
 
   test('Go-To-Post', async ({ page }) => {
-    await login(page)
+    await login(page, owner)
 
     await gotoGroup(page, group)
 
@@ -37,9 +42,9 @@ test.describe('Basic-Post-Integration-Tests', () => {
   })
 })
 
-test.skip('Area-Vote', async ({ page }) => {
+test.skip('Area-Vote', async ({ page, user }) => {
   test.setTimeout(0)
-  await login(page)
+  await login(page, user)
 
   const group = { name: 'Test Poll Area ' + randomString(), public: false }
 
@@ -77,8 +82,8 @@ test.skip('Area-Vote', async ({ page }) => {
   await expect(page.getByRole('button', { name: area })).toBeVisible()
 })
 
-test('Proposal-Test', async ({ page }) => {
-  await login(page)
+test('Proposal-Test', async ({ page, user }) => {
+  await login(page, user)
 
   const group = { name: 'Test Group Poll ' + randomString(), public: false }
 
@@ -106,9 +111,9 @@ test('Proposal-Test', async ({ page }) => {
   await expect(page.getByText('#Lol')).toBeVisible()
 })
 
-test('Proposal-Spam-Test', async ({ page }) => {
+test('Proposal-Spam-Test', async ({ page, user }) => {
   test.setTimeout(120000)
-  await login(page)
+  await login(page, user)
 
   const rand = randomString()
   const group = { name: 'Test Group Proposals ' + rand, public: false }
@@ -135,8 +140,8 @@ test('Proposal-Spam-Test', async ({ page }) => {
   // expect(after).toEqual(before)
 })
 
-test.skip('Prediction-Creation', async ({ page }) => {
-  await login(page)
+test.skip('Prediction-Creation', async ({ page, user }) => {
+  await login(page, user)
 
   const group = { name: 'Test Poll Prediction ' + randomString(), public: false }
 
@@ -165,10 +170,10 @@ test.skip('Prediction-Creation', async ({ page }) => {
   await predictionStatementCreate(page, proposal, prediction)
 })
 
-test.skip('Prediction-Statements', async ({ page }) => {
+test.skip('Prediction-Statements', async ({ page, user }) => {
   // test.setTimeout(520000);
 
-  await login(page)
+  await login(page, user)
 
   const group = { name: 'Test Prediction Statement ' + randomString(), public: true }
 
@@ -209,10 +214,10 @@ test.skip('Prediction-Statements', async ({ page }) => {
   //TODO Screenshot tests
 })
 
-test.skip('Prediction-Probability', async ({ page }) => {
+test.skip('Prediction-Probability', async ({ page, user }) => {
   test.setTimeout(50000)
   // await page.waitForTimeout(12000)
-  await login(page)
+  await login(page, user)
 
   const group = { name: 'Test Group Probability Voting', public: true }
 
@@ -256,10 +261,10 @@ test.skip('Prediction-Probability', async ({ page }) => {
   expect(await page.getByText('Probability: 40%').click({ timeout: 10000 }))
 })
 
-test.skip('Prediction-Probabilities', async ({ page }) => {
+test.skip('Prediction-Probabilities', async ({ page, user }) => {
   test.setTimeout(50000)
   // await page.waitForTimeout(12000)
-  await login(page)
+  await login(page, user)
 
   const group = { name: 'Test Group Probability-voting', public: true }
   const area = 'Tag imact test ' + randomString()
@@ -290,7 +295,7 @@ test.skip('Prediction-Probabilities', async ({ page }) => {
 
   const bPage = await newWindow()
 
-  await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
+  const userB = await loginAsNewUser(bPage)
 
   await joinGroup(bPage, group)
 
@@ -312,10 +317,10 @@ test.skip('Prediction-Probabilities', async ({ page }) => {
   expect(await page.getByText('Probability: 40%').click({ timeout: 10000 }))
 })
 
-test.skip('Prediction-Probabilities-2', async ({ page }) => {
+test.skip('Prediction-Probabilities-2', async ({ page, user }) => {
   test.setTimeout(50000)
   // await page.waitForTimeout(12000)
-  await login(page)
+  await login(page, user)
 
   const group = { name: 'Test Group Probability-voting', public: true }
   const area = 'Tag imact test ' + randomString()
@@ -346,7 +351,7 @@ test.skip('Prediction-Probabilities-2', async ({ page }) => {
 
   const bPage = await newWindow()
 
-  await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
+  const userB = await loginAsNewUser(bPage)
 
   await joinGroup(bPage, group)
 
@@ -368,8 +373,8 @@ test.skip('Prediction-Probabilities-2', async ({ page }) => {
   expect(await page.getByText('Probability: 30%').click({ timeout: 10000 }))
 })
 
-test('Poll-Start-To-Finish', async ({ page }) => {
-  await login(page)
+test('Poll-Start-To-Finish', async ({ page, user }) => {
+  await login(page, user)
 
   const group = { name: 'Test Poll start to finish ' + randomString(), public: false }
   await createGroup(page, group)
@@ -407,8 +412,8 @@ test('Poll-Start-To-Finish', async ({ page }) => {
   await results(page)
 })
 
-test('Date-Poll', async ({ page }) => {
-  await login(page)
+test('Date-Poll', async ({ page, user }) => {
+  await login(page, user)
 
   const group = { name: 'Test Group Poll' + randomString(), public: false }
   const poll = { title: 'Test Group Poll', date: true }
