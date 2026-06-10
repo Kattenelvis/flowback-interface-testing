@@ -1,0 +1,7 @@
+.git/
+test-results/
+tests/
+.env.example
+.gitignore
+.prettierrc
+node_modules/
