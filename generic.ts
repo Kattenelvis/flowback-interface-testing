@@ -76,7 +76,8 @@ export async function register(page: any) {
 
   await page.getByRole('button', { name: 'Send' }).click()
   await expect(page.getByText('Email Sent')).toBeVisible()
-  await expect(page.getByText('Mail Sent')).toBeVisible()
+
+  await page.goto(`${process.env.LINK}/login/create`)
 
   await page.getByLabel('Verification Code').click()
   await page.getByLabel('Verification Code').fill('geageageadgea')

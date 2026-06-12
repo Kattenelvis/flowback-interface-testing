@@ -11,7 +11,6 @@ test('Login-Enter', async ({ page }) => {
 
 // TODO: Use automated email testing
 test('Register', async ({ page }) => {
-  test.skip()
   await register(page)
 })
 
