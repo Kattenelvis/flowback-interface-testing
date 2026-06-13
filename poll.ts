@@ -4,11 +4,18 @@ import { expect } from '@playwright/test'
 // Only works inside a poll
 export async function fastForward(page: any, times = 1) {
   await expect(page.locator('#poll-header-multiple-choices')).toBeVisible()
+  const ffButton = page.getByRole('button', { name: 'Fast Forward' })
   for (let i = 0; i < times; i++) {
     await page.waitForTimeout(500)
-    const visible = await page.getByRole('button', { name: 'Fast Forward' }).isVisible()
-    if (!visible) await page.locator('#poll-header-multiple-choices').click()
-    await page.getByRole('button', { name: 'Fast Forward' }).click()
+    if (!(await ffButton.isVisible())) await page.locator('#poll-header-multiple-choices').click()
+    // If the poll has reached its final phase there is no Fast Forward button left;
+    // stop instead of hanging while waiting for a button that will never appear.
+    try {
+      await expect(ffButton).toBeVisible({ timeout: 3000 })
+    } catch {
+      break
+    }
+    await ffButton.click()
   }
   await page.locator('#poll-header-multiple-choices').click()
 }

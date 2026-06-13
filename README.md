@@ -38,10 +38,16 @@ Then run playwright commands, as found here: <https://playwright.dev/docs/test-c
 
 For instance:
 
-```(Bash)
+```bash
 npx playwright test . --headed
 ```
 
-```(Bash)
+```bash
 npx playwright test -g "Delegation-Poll" --headed
+```
+
+Reset database between tests
+
+```bash
+docker compose down -v
 ```
