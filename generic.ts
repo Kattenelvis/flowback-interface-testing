@@ -51,26 +51,25 @@ export async function register(page: any) {
   const randomEmail = `${randomUsername}@flowback.test`
 
   await page.goto(`${process.env.LINK}/login`)
-  await expect(page.locator('#login-page')).toBeVisible()
+  // Generous timeout: under heavy parallel load the frontend can be slow to render
+  await expect(page.locator('#login-page')).toBeVisible({ timeout: 30000 })
 
   await page.getByRole('button', { name: 'Register' }).click()
   await page.getByLabel('Email').click()
   await page.getByLabel('Email').fill(randomEmail)
   await page.getByLabel('Yes').check()
 
-  // Attach the listener BEFORE submitting so we catch the register response
-  let registrationCode = ''
-  page.on('response', async (response: any) => {
-    if (response.url().includes('register') && !response.url().includes('verify')) {
-      registrationCode = (await response.text()).slice(1, -1)
-    }
-  })
-
+  // Wait deterministically for the register response so we always capture the code
+  const registerResponsePromise = page.waitForResponse(
+    (response: any) => response.url().includes('register') && !response.url().includes('verify'),
+  )
   await page.getByRole('button', { name: 'Send' }).click()
+  const registrationCode = (await (await registerResponsePromise).text()).slice(1, -1)
   await expect(page.getByText('Email Sent')).toBeVisible()
 
   await page.goto(`${process.env.LINK}/login/create`)
   // Verify form is rendered inline (selectedPage='Verify'), no navigation needed
+  await expect(page.getByLabel('Verification Code')).toBeVisible({ timeout: 30000 })
   await page.getByLabel('Verification Code').fill(registrationCode)
   await page.getByLabel('Username').fill(randomUsername)
   await page.getByLabel('Choose a Password').fill(process.env.TEST_PASS)

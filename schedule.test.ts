@@ -1,8 +1,8 @@
 import { test, expect } from '@playwright/test'
-import { login } from './generic'
+import { register } from './generic'
 
 test('Create-Edit-Delete-Schedule-Event', async ({ page }) => {
-  await login(page)
+  await register(page)
 
   // Navigate to schedule page
   await page.goto(`${process.env.LINK}/schedule`)
