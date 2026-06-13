@@ -1,5 +1,5 @@
 import { test, chromium, expect } from '@playwright/test'
-import { login, newWindow, randomString, registerTest } from './generic'
+import { register, newWindow, randomString } from './generic'
 import { createPoll, createProposal, fastForward, goToPost, vote } from './poll'
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group'
 import { becomeDelegate, delegateToUser } from './delegation'
@@ -8,7 +8,7 @@ import 'dotenv/config'
 import { assignPermission, createPermission } from './permission'
 
 test('Become-Delegate', async ({ page }) => {
-  await login(page)
+  await register(page)
 
   const group = { name: 'Test Group Delegation ' + randomString(), public: true }
 
@@ -20,7 +20,7 @@ test('Become-Delegate', async ({ page }) => {
 })
 
 test('Delegation-Poll', async ({ page }) => {
-  await login(page)
+  await register(page)
 
   const group = { name: 'Test Group Delegation' + randomString(), public: true }
 
@@ -32,7 +32,7 @@ test('Delegation-Poll', async ({ page }) => {
 
   await becomeDelegate(page, group)
 
-  await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
+  const b = await register(bPage)
   await joinGroup(bPage, group)
 
   await page.waitForTimeout(1000)
@@ -51,7 +51,7 @@ test('Delegation-Poll', async ({ page }) => {
   //Give b voting rights
   const permission_name = 'Test Permission' + randomString()
   await createPermission(page, group, [2], permission_name)
-  await assignPermission(page, group, permission_name, process.env.SECONDUSER_NAME)
+  await assignPermission(page, group, permission_name, b.username)
 
   await gotoGroup(page, group)
 
@@ -79,7 +79,7 @@ test('Delegation-Poll', async ({ page }) => {
 })
 
 test('Delegate-History', async ({ page }) => {
-  await login(page)
+  await register(page)
 
   const group = { name: 'Test Group Delegate History ' + randomString(), public: true }
 
@@ -144,7 +144,7 @@ test('Delegate-History', async ({ page }) => {
 
 test('Delegation-Override-Results', async ({ page }) => {
   test.setTimeout(0)
-  await login(page)
+  await register(page)
 
   const group = { name: 'Test Group Delegation Override ' + randomString(), public: true }
   const poll = { title: 'Test Poll Delegation Override ' + randomString() }
@@ -156,9 +156,9 @@ test('Delegation-Override-Results', async ({ page }) => {
   const cPage = await newWindow()
   const dPage = await newWindow()
 
-  await login(cPage, { username: process.env.THIRDUSER_NAME, password: process.env.THIRDUSER_PASS })
-  await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
-  await login(dPage, { username: process.env.FOURTHUSER_NAME, password: process.env.FOURTHUSER_PASS })
+  const c = await register(cPage)
+  const b = await register(bPage)
+  const d = await register(dPage)
 
   await createGroup(page, group)
 
@@ -176,7 +176,7 @@ test('Delegation-Override-Results', async ({ page }) => {
   await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click')
   const emptyPermission = 'No Voting ' + randomString()
   await createPermission(page, group, [], emptyPermission)
-  await assignPermission(page, group, emptyPermission, process.env.FOURTHUSER_NAME)
+  await assignPermission(page, group, emptyPermission, d.username)
 
   await gotoGroup(page, group)
   await createPoll(page, poll)

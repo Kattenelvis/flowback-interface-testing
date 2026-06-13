@@ -1,17 +1,20 @@
 import test from "playwright/test"
-import { login, logout, newWindow } from "./generic"
+import { login, logout, newWindow, register } from "./generic"
 
-// Nothing works if user cannot login at all, with all default testing accounts
+// Nothing works if users cannot be created or login at all
 test('Smoke-Test', async ({ page }) => {
-  await login(page)
   const bPage = await newWindow()
   const dPage = await newWindow()
-  await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
+  const a = await register(page)
+  const b = await register(bPage)
+  const d = await register(dPage)
   await logout(page)
-  await login(page, { username: process.env.THIRDUSER_NAME, password: process.env.THIRDUSER_PASS })
-  await logout(page)
-  await login(dPage, { username: process.env.FOURTHUSER_NAME, password: process.env.FOURTHUSER_PASS })
+  const c = await register(page)
   await logout(bPage)
   await logout(dPage)
+  await logout(page)
+  await login(page, a)
+  await login(bPage, b)
+  await login(dPage, d)
 })
 
