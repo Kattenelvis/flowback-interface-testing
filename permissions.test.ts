@@ -1,74 +1,50 @@
 import test, { expect } from '@playwright/test'
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group'
-import { login, newWindow, randomString } from './generic'
+import { newWindow, randomString, register } from './generic'
 import { assignPermission, createPermission } from './permission'
 import 'dotenv/config'
 
-test('Create-Permission-Full', async ({ page }) => {
-    await login(page)
+// Two users: A owns a group and controls permissions, B is a member whose
+// "Create a post" ability is toggled by the role A assigns.
+test('Permissions', async ({ page }) => {
+  // Heavy two-user flow (two registrations, two role creations, two assignments);
+  // give it a larger timeout so it survives parallel load.
+  test.slow()
 
-    const rand = Math.random().toString(36).slice(2, 10)
-    const group = { name: 'Test Group Permissions ' + rand, public: true }
-    await createGroup(page, group)
+  const group = { name: 'Test Group Permissions ' + randomString(), public: true }
 
-    await expect(page.locator('#group-header-title')).toHaveText(group.name)
-    await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click')
+  // A creates the group
+  await register(page)
+  await createGroup(page, group)
+  await expect(page.locator('#group-header-title')).toHaveText(group.name)
 
-    const permission_name = 'No Permissions'
+  // B joins the group
+  const bPage = await newWindow()
+  const b = await register(bPage)
+  await joinGroup(bPage, group)
 
-    let perms = []
-    for (let i = 0; i < 17; i++) {
-        perms.push(i)
-    }
+  const createPostButton = bPage.locator('#create-a-post-sidebar-button')
 
-    await createPermission(page, group, perms, permission_name)
+  // A creates an empty role and a full role
+  const noPermission = 'No Permissions'
+  const fullPermission = 'Full Permissions'
+  const allPerms = [...Array(17).keys()]
 
-    const bPage = await newWindow()
+  await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click')
+  await createPermission(page, group, [], noPermission)
+  await createPermission(page, group, allPerms, fullPermission)
 
-    await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
-    await joinGroup(bPage, group)
-    await page.waitForTimeout(400)
+  // Assign the empty role -> B cannot create a post
+  await assignPermission(page, group, noPermission, b.username)
+  await gotoGroup(bPage, group)
+  await createPostButton.waitFor()
+  await expect(createPostButton).toHaveAttribute('aria-disabled', 'true')
 
-    await assignPermission(page, group, permission_name, process.env.SECONDUSER_NAME)
+  // Assign the full role -> B can create a post
+  await assignPermission(page, group, fullPermission, b.username)
+  await gotoGroup(bPage, group)
+  await createPostButton.waitFor()
+  await expect(createPostButton).toHaveAttribute('aria-disabled', 'false')
 
-    await page.waitForTimeout(300)
-
-    await gotoGroup(bPage, group)
-    await bPage.locator('#create-a-post-sidebar-button').waitFor()
-    expect(await bPage.locator('#create-a-post-sidebar-button').isDisabled()).not
-
-    // await expect(bPage.locator('#create-a-post-sidebar-button').isDisabled())
-
-    await deleteGroup(page, group)
+  await deleteGroup(page, group)
 })
-
-test('Create-Permission-None', async ({ page }) => {
-    await login(page)
-
-    const group = { name: 'Test Group Permissions ' + randomString(), public: true }
-    await createGroup(page, group)
-
-    await expect(page.locator('#group-header-title')).toHaveText(group.name)
-
-    const bPage = await newWindow()
-
-    await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
-    await joinGroup(bPage, group)
-
-    await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click')
-
-    const permission_name = 'No Permissions'
-    await createPermission(page, group, [], permission_name)
-
-    await page.waitForTimeout(1000)
-    await assignPermission(page, group, permission_name, process.env.SECONDUSER_NAME)
-
-    await page.waitForTimeout(500)
-    await gotoGroup(bPage, group)
-
-    await bPage.locator('#create-a-post-sidebar-button').waitFor()
-    await expect(bPage.locator('#create-a-post-sidebar-button').isDisabled()).toBeTruthy()
-
-    await deleteGroup(page, group)
-})
-

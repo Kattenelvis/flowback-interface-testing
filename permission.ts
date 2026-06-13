@@ -15,8 +15,8 @@ export async function createPermission(
         await page.getByRole('button', { name: 'Edit Group' }).click()
     }
     // Create, deactive and delete permission
-    await page.getByRole('button', { name: 'Permissions' }).click()
-    await page.getByRole('button', { name: 'Create' }).click()
+    await page.getByRole('button', { name: 'Permissions', exact: true }).click()
+    await page.getByRole('button', { name: 'Create', exact: true }).click()
     await page.getByLabel('Role name * 0/').click()
     await page.getByLabel('Role name * 0/').fill(permission_name)
     for (const index of permissions) {
@@ -36,19 +36,26 @@ export async function assignPermission(
         await page.getByRole('button', { name: 'Edit Group' }).click()
     }
 
-    await page.getByRole('button', { name: 'Permissions' }).click()
+    await page.getByRole('button', { name: 'Permissions', exact: true }).click()
     await page.getByRole('button', { name: 'Assign' }).click()
 
     // console.log(`#plus-${idfy(user_name)}`);
 
     const addRoleButton = page.locator(`#plus-${idfy(user_name)}`)
     await expect(addRoleButton).toBeVisible()
-    await addRoleButton.click()
 
-    await page
+    // The + button toggles the role panel; make sure it ends up open
+    const roleTag = page
         .getByRole('listitem')
         .locator(`#permission-${idfy(permission_name)}-${idfy(user_name)}`)
-        .click()
+    await addRoleButton.click()
+    try {
+        await expect(roleTag).toBeVisible({ timeout: 1000 })
+    } catch {
+        await addRoleButton.click()
+        await expect(roleTag).toBeVisible()
+    }
+    await roleTag.click()
 
     await expect(page.getByText('Successfully updated permission')).toBeVisible()
 }
