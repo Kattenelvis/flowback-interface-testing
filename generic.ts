@@ -23,7 +23,7 @@ export async function newWindow() {
 
 export async function login(
   page: any,
-  { username = process.env.MAINUSER_NAME ?? 'a', password = process.env.MAINUSER_PASS ?? 'a' } = {},
+  { username = 'a', password = 'a' } = {},
 ) {
   await page.goto(`${process.env.LINK}/login`)
   await expect(page.locator('#login-page')).toBeVisible()
@@ -39,7 +39,7 @@ export async function login(
 
 export async function loginEnter(
   page: any,
-  { username = process.env.MAINUSER_NAME ?? 'a', password = process.env.MAINUSER_PASS ?? 'a' } = {},
+  { username = 'a', password = 'a' } = {},
 ) {
   await page.goto(`${process.env.LINK}/login`)
   await expect(page.locator('#login-page')).toBeVisible()

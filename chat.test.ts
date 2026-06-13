@@ -195,7 +195,7 @@ test('Group-Chat-Creation', async ({ page }) => {
   await page.getByRole('button', { name: 'Confirm', exact: true }).click()
   await expect(page.getByText('Failed to created group chat')).not.toBe
 
-  const groupname = `${process.env.MAINUSER_NAME}, ${process.env.SECONDUSER_NAME}, ${username}`
+  // const groupname = `${process.env.MAINUSER_NAME}, ${process.env.SECONDUSER_NAME}, ${username}`
   // Write messages and check that they are visible
   await page.getByPlaceholder('Write a message...').click()
   await page.getByPlaceholder('Write a message...').fill('Hello!! :D')
