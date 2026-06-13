@@ -376,7 +376,6 @@ test('Poll-Start-To-Finish', async ({ page }) => {
   // await page.waitForTimeout(500)
 
   await fastForward(page, 3)
-  await fastForward(page, 1)
   await page.reload()
 
   await vote(page, proposal)

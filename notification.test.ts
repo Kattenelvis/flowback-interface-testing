@@ -72,6 +72,10 @@ test('Poll-Start-To-Finish-Notification', async ({ page }) => {
   await bPage.getByRole('button', { name: 'A new poll has been posted' }).nth(0).click()
   await expect(bPage.getByText(poll.title)).toBeVisible()
 
+  // Scroll the bell up before opening so its dropdown ("Subscribe to All")
+  // renders fully in view instead of below the viewport fold.
+  await bPage.locator('#notification-bell-poll').scrollIntoViewIfNeeded()
+  await bPage.evaluate(() => window.scrollBy(0, 200))
   await bPage.locator('#notification-bell-poll').click()
   await bPage.getByRole('button', { name: 'Subscribe to All' }).click()
 

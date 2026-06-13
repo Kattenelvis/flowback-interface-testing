@@ -1,10 +1,10 @@
 import { test, expect } from '@playwright/test';
-import { login, randomString } from './generic';
+import { login, randomString, register } from './generic';
 import { createGroup, gotoGroup } from './group';
 
 test('KPI-Create', async ({ page }) => {
   const group = { name: 'KPI-' + randomString() }
-  await login(page)
+  await register(page)
   await createGroup(page, group)
   // await gotoGroup(group)
 

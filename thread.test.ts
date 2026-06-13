@@ -3,29 +3,19 @@ import { randomString, register } from './generic'
 import { createGroup, gotoGroup } from './group'
 import { createThread } from './thread'
 
-const group = { name: 'Test Group Thread' + randomString(), public: false }
-
-test('Thread-Create', async ({ page }) => {
+test('Thread-Full', async ({ page }) => {
   await register(page)
+
+  const group = { name: 'Test Group Thread' + randomString(), public: false }
 
   await createGroup(page, group)
 
   await gotoGroup(page, group)
 
-  await createThread(page, group)
-})
-
-test('Thread-Comments', async ({ page }) => {
-  await register(page)
-
-  await createGroup(page, group)
-
-  await gotoGroup(page, group)
-
+  // Create
   await createThread(page, group)
 
-  // GOTO THREAD
-
+  // Comment + reply
   await page.getByPlaceholder('Write a comment...').click()
   await page.getByPlaceholder('Write a comment...').fill('Test Comment')
   await page.locator('button[type="submit"]').first().click()
@@ -37,29 +27,8 @@ test('Thread-Comments', async ({ page }) => {
   //TODO: Test images in comment
   // Test multiple users
   // TODO Test likes
-})
 
-test('Thread-Create-Report-Delete', async ({ page }) => {
-  await register(page)
-
-  const group = { name: 'Test Group Thread' + randomString(), public: false }
-
-  await createGroup(page, group)
-
-  await gotoGroup(page, group)
-
-  await createThread(page, group)
-
-  await page.getByPlaceholder('Write a comment...').click()
-  await page.getByPlaceholder('Write a comment...').fill('Test Comment')
-  await page.locator('button[type="submit"]').first().click()
-  await page.getByRole('button', { name: 'Reply' }).click()
-  await page.getByPlaceholder('Write a comment...').nth(1).click()
-  await page.getByPlaceholder('Write a comment...').nth(1).fill('Test Reply with file')
-  await page.locator('button[type="submit"]').nth(1).click()
-
-  //TODO Test images in comment
-
+  // Report
   await page.locator('#poll-header-multiple-choices > button').click()
   await page.getByRole('button', { name: 'Report Thread' }).click()
   await page.getByRole('textbox', { name: 'Title' }).click()
@@ -69,6 +38,8 @@ test('Thread-Create-Report-Delete', async ({ page }) => {
   await page.getByRole('button', { name: 'Report', exact: true }).click()
   await expect(page.getByText('Thread reported successfully')).toBeVisible()
   await page.waitForTimeout(500)
+
+  // Delete
   // Dropdown stays open after report — click Delete Thread directly
   await page.getByRole('button', { name: 'Delete Thread' }).click()
   await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toHaveCount(1)
