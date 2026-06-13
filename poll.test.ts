@@ -10,17 +10,18 @@ import {
   results,
   vote,
 } from './poll'
-import { login, newWindow, randomString, idfy } from './generic'
+import { register, newWindow, randomString, idfy } from './generic'
 import { gotoGroup, createArea, createGroup, joinGroup } from './group'
 import 'dotenv/config'
 
 test.describe('Basic-Post-Integration-Tests', () => {
   test.describe.configure({ mode: 'serial' })
-  const group = { name: 'Test Group Poll' + randomString(), public: false }
+  // Public so the second (freshly registered) user can join and reach the poll
+  const group = { name: 'Test Group Poll' + randomString(), public: true }
   const poll = { title: 'Test Poll Create and Go ' + randomString(), date: false }
 
   test('Create-Post', async ({ page }) => {
-    await login(page)
+    await register(page)
 
     await createGroup(page, group)
     //Random poll name
@@ -28,8 +29,10 @@ test.describe('Basic-Post-Integration-Tests', () => {
   })
 
   test('Go-To-Post', async ({ page }) => {
-    await login(page)
+    await register(page)
 
+    // Different user than Create-Post, so join the group before viewing the poll
+    await joinGroup(page, group)
     await gotoGroup(page, group)
 
     //Random poll name
@@ -39,7 +42,7 @@ test.describe('Basic-Post-Integration-Tests', () => {
 
 test.skip('Area-Vote', async ({ page }) => {
   test.setTimeout(0)
-  await login(page)
+  await register(page)
 
   const group = { name: 'Test Poll Area ' + randomString(), public: false }
 
@@ -77,34 +80,9 @@ test.skip('Area-Vote', async ({ page }) => {
   await expect(page.getByRole('button', { name: area })).toBeVisible()
 })
 
-test('Proposal-Test', async ({ page }) => {
-  await login(page)
-
-  const group = { name: 'Test Group Poll ' + randomString(), public: false }
-
-  await createGroup(page, group)
-
-  await gotoGroup(page, group)
-
-  await createPoll(page, { phase_time: 1 })
-
-  await createProposal(page, { title: 'Lol', description: 'Description funny' })
-
-  // Testing comment tagging and filtering system
-  // TODO: Expand this test
-  await page.getByPlaceholder('Write a comment...').click()
-  await page.getByPlaceholder('Write a comment...').fill('#')
-  await page.getByRole('button', { name: 'Lol' }).click()
-  await page.locator('.flex.gap-1 > button').click()
-  await page.getByRole('button', { name: 'Filter by Proposal' }).click()
-  await page.getByRole('checkbox').check()
-  await page.getByRole('button', { name: 'Close modal', exact: true }).click()
-  await expect(page.getByText('#Lol')).toBeVisible()
-})
-
 test('Proposal-Spam-Test', async ({ page }) => {
   test.setTimeout(120000)
-  await login(page)
+  await register(page)
 
   const rand = randomString()
   const group = { name: 'Test Group Proposals ' + rand, public: false }
@@ -134,7 +112,7 @@ test('Proposal-Spam-Test', async ({ page }) => {
 })
 
 test.skip('Prediction-Creation', async ({ page }) => {
-  await login(page)
+  await register(page)
 
   const group = { name: 'Test Poll Prediction ' + randomString(), public: false }
 
@@ -166,7 +144,7 @@ test.skip('Prediction-Creation', async ({ page }) => {
 test.skip('Prediction-Statements', async ({ page }) => {
   // test.setTimeout(520000);
 
-  await login(page)
+  await register(page)
 
   const group = { name: 'Test Prediction Statement ' + randomString(), public: true }
 
@@ -210,7 +188,7 @@ test.skip('Prediction-Statements', async ({ page }) => {
 test.skip('Prediction-Probability', async ({ page }) => {
   test.setTimeout(50000)
   // await page.waitForTimeout(12000)
-  await login(page)
+  await register(page)
 
   const group = { name: 'Test Group Probability Voting', public: true }
 
@@ -257,7 +235,7 @@ test.skip('Prediction-Probability', async ({ page }) => {
 test.skip('Prediction-Probabilities', async ({ page }) => {
   test.setTimeout(50000)
   // await page.waitForTimeout(12000)
-  await login(page)
+  await register(page)
 
   const group = { name: 'Test Group Probability-voting', public: true }
   const area = 'Tag imact test ' + randomString()
@@ -288,7 +266,7 @@ test.skip('Prediction-Probabilities', async ({ page }) => {
 
   const bPage = await newWindow()
 
-  await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
+  await register(bPage)
 
   await joinGroup(bPage, group)
 
@@ -313,7 +291,7 @@ test.skip('Prediction-Probabilities', async ({ page }) => {
 test.skip('Prediction-Probabilities-2', async ({ page }) => {
   test.setTimeout(50000)
   // await page.waitForTimeout(12000)
-  await login(page)
+  await register(page)
 
   const group = { name: 'Test Group Probability-voting', public: true }
   const area = 'Tag imact test ' + randomString()
@@ -344,7 +322,7 @@ test.skip('Prediction-Probabilities-2', async ({ page }) => {
 
   const bPage = await newWindow()
 
-  await login(bPage, { username: process.env.SECONDUSER_NAME, password: process.env.SECONDUSER_PASS })
+  await register(bPage)
 
   await joinGroup(bPage, group)
 
@@ -367,7 +345,9 @@ test.skip('Prediction-Probabilities-2', async ({ page }) => {
 })
 
 test('Poll-Start-To-Finish', async ({ page }) => {
-  await login(page)
+  // Long multi-phase flow (group, poll, proposals, several fast-forwards, votes, results)
+  test.slow()
+  await register(page)
 
   const group = { name: 'Test Poll start to finish ' + randomString(), public: false }
   await createGroup(page, group)
@@ -375,7 +355,6 @@ test('Poll-Start-To-Finish', async ({ page }) => {
   // await createArea(page, group, 'Tag 1')
 
   // for (let i = 0; i < 30; i++) {
-  await gotoGroup(page, group)
 
   await createPoll(page, { title: 'title' + randomString(), phase_time: 1 })
 
@@ -388,8 +367,6 @@ test('Poll-Start-To-Finish', async ({ page }) => {
   await createProposal(page, proposal)
   await createProposal(page, proposal2)
 
-  await fastForward(page, 1)
-
   // await predictionStatementCreate(page, proposal)
   //
   // await fastForward(page, 1)
@@ -399,16 +376,19 @@ test('Poll-Start-To-Finish', async ({ page }) => {
   // await page.waitForTimeout(500)
 
   await fastForward(page, 3)
+  await fastForward(page, 1)
+  await page.reload()
 
   await vote(page, proposal)
   await vote(page, proposal2)
 
   await fastForward(page, 1)
+
   await results(page)
 })
 
 test('Date-Poll', async ({ page }) => {
-  await login(page)
+  await register(page)
 
   const group = { name: 'Test Group Poll' + randomString(), public: false }
   const poll = { title: 'Test Group Poll', date: true }

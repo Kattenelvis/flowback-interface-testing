@@ -16,8 +16,9 @@ export async function fastForward(page: any, times = 1) {
 // Only works inside a group. One could use goToGroup before this
 export async function createPoll(page: any, { title = 'Test Poll', date = false, phase_time = 1 } = {}) {
   //Create a Poll
-  await page.getByRole('button', { name: 'Create a post' }).click()
-  await page.waitForTimeout(300)
+  const createPostButton = page.getByRole('button', { name: 'Create a post' })
+  await expect(createPostButton).toBeVisible()
+  await createPostButton.click()
   await expect(page.getByText('PollThread')).toBeVisible()
   await page.getByLabel('Title').click()
   await page.getByLabel('Title').fill(title)
@@ -74,10 +75,10 @@ export async function createProposal(page: any, { title = 'Test Proposal', descr
   // await page.locator('#proposal-textarea').fill(title)
   // await page.getByRole('button', { name: 'Cancel' }).click()
   // await page.getByRole('button', { name: 'Add Proposal' }).click()
-  await page.waitForLoadState('networkidle')
-  await page.getByRole('textbox', { name: 'Title' }).click()
-  await page.waitForTimeout(1000)
-  await page.getByRole('textbox', { name: 'Title' }).pressSequentially(title, { delay: 10 })
+  const titleBox = page.getByRole('textbox', { name: 'Title' })
+  await expect(titleBox).toBeVisible()
+  await titleBox.click()
+  await titleBox.pressSequentially(title, { delay: 10 })
   await page.locator('#proposal-textarea').click()
   await page.locator('#proposal-textarea').pressSequentially(description, { delay: 10 })
   await page.getByRole('button', { name: 'Confirm' }).click()
