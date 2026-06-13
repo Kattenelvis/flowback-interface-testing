@@ -1,11 +1,11 @@
 import test from "playwright/test"
-import { login, logout, newWindow, register } from "./generic"
+import { login, logout, newWindow, register, registerTest } from "./generic"
 
 // Nothing works if users cannot be created or login at all
 test('Smoke-Test', async ({ page }) => {
   const bPage = await newWindow()
   const dPage = await newWindow()
-  const a = await register(page)
+  const a = await registerTest(page)
   const b = await register(bPage)
   const d = await register(dPage)
   await logout(page)
@@ -17,4 +17,5 @@ test('Smoke-Test', async ({ page }) => {
   await login(bPage, b)
   await login(dPage, d)
 })
+
 
