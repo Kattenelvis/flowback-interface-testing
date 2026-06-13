@@ -94,6 +94,7 @@ export async function register(page: any) {
   await page.getByRole('button', { name: 'Send' }).click()
 
   await expect(page.getByText('Success')).toBeVisible()
+  await page.waitForTimeout(2000)
   await expect(page).toHaveURL(`${process.env.LINK}/home`)
 
   if (await page.getByRole('button', { name: 'Ok' }).isVisible()) {
