@@ -1,5 +1,5 @@
 import { test, expect, firefox, chromium } from '@playwright/test'
-import { login, newWindow, randomString, register } from './generic'
+import { login, newWindow, randomString, registerTest } from './generic'
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group'
 import 'dotenv/config'
 

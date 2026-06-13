@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { idfy, login, newWindow, randomString } from './generic'
+import { idfy, login, newWindow, randomString, register } from './generic'
 import { createGroup, deleteGroup, gotoFirstGroup, gotoGroup, joinGroup } from './group'
 import { createPermission } from './permission'
 
@@ -16,7 +16,7 @@ test.describe('Group-Integration-Tests', () => {
   const group = { name: 'Test Group Group-Testing Public' + randomString(), public: true, invite: false }
 
   test('Create Group', async ({ page }) => {
-    await login(page)
+    await register(page)
     await createGroup(page, group)
   })
 

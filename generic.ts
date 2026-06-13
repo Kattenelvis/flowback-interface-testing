@@ -45,10 +45,51 @@ export async function loginEnter(
   await expect(page).toHaveURL(`${process.env.LINK}/home`)
 }
 
+// Minimal registration for other functions
+export async function register(page: any) {
+  const randomUsername = randomString()
+  const randomEmail = `${randomUsername}@flowback.test`
+
+  await page.goto(`${process.env.LINK}/login`)
+  await expect(page.locator('#login-page')).toBeVisible()
+
+  await page.getByRole('button', { name: 'Register' }).click()
+  await page.getByLabel('Email').click()
+  await page.getByLabel('Email').fill(randomEmail)
+  await page.getByLabel('Yes').check()
+
+  // Attach the listener BEFORE submitting so we catch the register response
+  let registrationCode = ''
+  page.on('response', async (response: any) => {
+    if (response.url().includes('register') && !response.url().includes('verify')) {
+      registrationCode = (await response.text()).slice(1, -1)
+    }
+  })
+
+  await page.getByRole('button', { name: 'Send' }).click()
+  await expect(page.getByText('Email Sent')).toBeVisible()
+
+  await page.goto(`${process.env.LINK}/login/create`)
+  // Verify form is rendered inline (selectedPage='Verify'), no navigation needed
+  await page.getByLabel('Verification Code').fill(registrationCode)
+  await page.getByLabel('Username').fill(randomUsername)
+  await page.getByLabel('Choose a Password').fill(process.env.TEST_PASS)
+  await page.getByRole('button', { name: 'Send' }).click()
+
+  await expect(page.getByText('Success')).toBeVisible()
+  await page.waitForTimeout(2000)
+  await expect(page).toHaveURL(`${process.env.LINK}/home`)
+
+  if (await page.getByRole('button', { name: 'Ok' }).isVisible()) {
+    await page.getByRole('button', { name: 'Ok' }).click()
+  }
+
+  return { username: randomUsername, email: randomEmail, password: process.env.TEST_PASS }
+}
 // Tests registring a user
 // Only works if PUBLIC_EMAIL_REGISTRATION=FALSE in .env in the flowback-backend repository
 // TODO: Automated Email testing
-export async function register(page: any) {
+export async function registerTest(page: any) {
   const randomUsername = randomString()
   const randomEmail = `${randomUsername}@flowback.test`
 
@@ -70,7 +111,7 @@ export async function register(page: any) {
   let registrationCode = ''
   await page.on('response', async (response: any) => {
     if (response.url().includes('register') && !response.url().includes('verify')) {
-      registrationCode = await response.text()
+      registrationCode = (await response.text()).slice(1, -1)
     }
   })
 

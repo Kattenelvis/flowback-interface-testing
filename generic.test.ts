@@ -1,5 +1,5 @@
 import test from '@playwright/test'
-import { login, logout, loginEnter, register } from './generic'
+import { login, logout, loginEnter, registerTest } from './generic'
 
 test('Login', async ({ page }) => {
   await login(page)
@@ -11,7 +11,7 @@ test('Login-Enter', async ({ page }) => {
 
 // TODO: Use automated email testing
 test('Register', async ({ page }) => {
-  await register(page)
+  await registerTest(page)
 })
 
 test('Logout', async ({ page }) => {

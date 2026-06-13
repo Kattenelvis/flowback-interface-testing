@@ -1,5 +1,5 @@
 import { test, chromium, expect } from '@playwright/test'
-import { login, newWindow, randomString, register } from './generic'
+import { login, newWindow, randomString, registerTest } from './generic'
 import { createPoll, createProposal, fastForward, goToPost, vote } from './poll'
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group'
 import { becomeDelegate, delegateToUser } from './delegation'
