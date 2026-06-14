@@ -142,17 +142,18 @@ export async function predictionProbability(
 // Works for both delegate and normal voting
 export async function vote(page: any, proposal = { title: 'Proposal Title', vote: 1 }) {
   expect(proposal.vote >= 0 && proposal.vote <= 5, 'Vote must be between 0 and 5')
-  // Delegate Voting Phase
-  // Wait for a voting phase (delegate or non-delegate)
 
+  const track = page.locator(`#track-container-${idfy(proposal.title)}`)
+
+  // Wait for a voting phase (delegate or non-delegate) and the proposal's vote
+  // track to render, instead of a fixed sleep.
   await expect(page.locator('#poll-timeline').filter({
     hasText: /Delegate voting|Voting for non-delegates/
   })).toBeVisible()
+  await expect(track).toBeVisible()
 
-  await page.waitForTimeout(400)
-  await expect(page.locator(`#track-container-${idfy(proposal.title)}`)).toBeVisible()
-  await page
-    .locator(`#track-container-${idfy(proposal.title)} > div:nth-child(${2 + proposal.vote})`)
+  await track
+    .locator(`> div:nth-child(${2 + proposal.vote})`)
     .first()
     .click()
 
