@@ -43,7 +43,7 @@ npx playwright test . --headed
 ```
 
 ```bash
-npx playwright test . --project chromium --retries 3 --workers 6 --reporter=line --trace on
+npx playwright test . --project chromium --retries 3 --workers 6 --reporter=line --trace on --reporter list
 ```
 
 ```bash

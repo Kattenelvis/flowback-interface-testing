@@ -14,12 +14,11 @@ test('Become-Delegate', async ({ page }) => {
 
   await createGroup(page, group)
 
-  await page.waitForTimeout(300)
-
   await becomeDelegate(page, group)
 })
 
 test('Delegation-Poll', async ({ page }) => {
+  test.setTimeout(60000)
   await register(page)
 
   const group = { name: 'Test Group Delegation' + randomString(), public: true }
@@ -28,23 +27,20 @@ test('Delegation-Poll', async ({ page }) => {
 
   const bPage = await newWindow()
 
-  await page.waitForTimeout(300)
-
   await becomeDelegate(page, group)
 
   const b = await register(bPage)
   await joinGroup(bPage, group)
 
-  await page.waitForTimeout(1000)
   await bPage.getByRole('button', { name: 'Delegation', exact: true }).click()
   // await bPage.locator('#delegate-group-select').selectOption({ label: group.name });
   await bPage.getByRole('textbox', { name: '0/' }).click()
   await bPage.getByRole('textbox', { name: '0/' }).fill(group.name)
 
-  await page.waitForTimeout(1000)
   await expect(bPage.getByText("There are currently no delegates for this group")).not.toBeVisible()
+  await expect(bPage.getByRole('radio').first()).toBeVisible()
   await bPage.getByRole('radio').first().check()
-  await page.waitForTimeout(1000)
+  await expect(bPage.getByRole('radio').first()).toBeChecked()
 
   await gotoGroup(page, group)
   await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click')
@@ -100,39 +96,34 @@ test('Delegate-History', async ({ page }) => {
   await fastForward(page, 2)
   await vote(page, proposal)
   await fastForward(page, 2)
-  await page.waitForTimeout(4000)
-
   await fastForward(page, 1)
-  await page.waitForTimeout(4000)
-  // Navigate to delegate history for this group
-  await page.goto(`${process.env.LINK}/delegations`)
-  await page.getByRole('textbox', { name: '0/' }).fill(group.name)
-  await page.waitForTimeout(1000)
-  await page.getByRole('link', { name: 'History' }).first().click()
-  await expect(page.getByText(/Delegate history for/)).toBeVisible()
 
-  // Shows-Vote: verify poll and vote entry appear
-  await expect(page.getByRole('link', { name: poll.title })).toBeVisible()
+  // Delegate history is populated asynchronously (celery), so reload the
+  // delegations page and reopen the group's history until the entry arrives.
+  await expect(async () => {
+    await page.goto(`${process.env.LINK}/delegations`)
+    await page.getByRole('textbox', { name: '0/' }).fill(group.name)
+    await page.getByRole('link', { name: 'History' }).first().click()
+    await expect(page.getByText(/Delegate history for/)).toBeVisible({ timeout: 3000 })
+    // Shows-Vote: verify poll and vote entry appear
+    await expect(page.getByRole('link', { name: poll.title })).toBeVisible({ timeout: 3000 })
+  }).toPass()
   await expect(page.getByText(/Delegate voted:/)).toBeVisible()
 
   // Search: non-existent poll returns empty
   await page.getByPlaceholder('Search polls').fill('nonexistentpoll__xyz__12345')
   await page.getByPlaceholder('Search polls').dispatchEvent('input')
-  await page.waitForTimeout(1000)
   await expect(page.locator('ul > li')).toHaveCount(0)
 
   // Reset filter
   await page.getByRole('button', { name: 'Reset Filter' }).click()
-  await page.waitForTimeout(300)
   await expect(page.getByPlaceholder('Search polls')).toHaveValue('')
 
   // Sort: Z-A then A-Z
   const sortCombobox = page.getByRole('combobox').first()
   await sortCombobox.selectOption('Z - A')
-  await page.waitForTimeout(300)
   await expect(sortCombobox).toHaveValue('z-a')
   await sortCombobox.selectOption('A - Z')
-  await page.waitForTimeout(300)
   await expect(sortCombobox).toHaveValue('a-z')
 
   // Poll link: click through and verify URL
