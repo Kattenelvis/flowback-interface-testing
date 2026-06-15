@@ -1,6 +1,6 @@
 import { test, chromium, expect } from '@playwright/test'
 import { register, newWindow, randomString } from './generic'
-import { createPoll, createProposal, fastForward, goToPost, vote } from './poll'
+import { createPoll, createProposal, fastForward, goToPost, vote, waitForPhase } from './poll'
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group'
 import { becomeDelegate, delegateToUser } from './delegation'
 import { idfy } from './generic'
@@ -180,7 +180,13 @@ test('Delegation-Override-Results', async ({ page }) => {
 
   await fastForward(page, 2)
 
-  await cPage.reload()
+  // Wait until cPage actually reflects the delegate-voting phase (it advanced
+  // server-side via the fastForward above), then confirm every proposal track
+  // has rendered before voting — under CI load proposal 3 sometimes lagged.
+  await waitForPhase(cPage, /Delegate voting/)
+  for (const proposal of [proposalOne, proposalTwo, proposalThree])
+    await expect(cPage.locator(`#track-container-${idfy(proposal.title)}`)).toBeVisible()
+
   await vote(cPage, { title: proposalOne.title, vote: 1 })
   await vote(cPage, { title: proposalTwo.title, vote: 3 })
   await vote(cPage, { title: proposalThree.title, vote: 1 })
@@ -198,20 +204,19 @@ test('Delegation-Override-Results', async ({ page }) => {
   await expect(cPage.getByText('Vote Failed').first()).not.toBeVisible()
   await fastForward(page, 1)
 
-  // Reload so cPage picks up the new vote phase (otherwise phase is still delegate_vote)
+  // Reload so cPage/page pick up the new (non-delegate) vote phase — otherwise the
+  // phase is still delegate_vote. waitForPhase reload-retries until it's there
+  // instead of a single reload + flaky networkidle wait.
   // Ideally we'd eventually fix this with frontend polling on poll phase or events sent from backend or something
-  await cPage.reload()
-  await cPage.waitForLoadState('networkidle')
-  await page.reload()
-  await page.waitForLoadState('networkidle')
+  await waitForPhase(cPage, /Voting for non-delegates/)
+  await waitForPhase(page, /Voting for non-delegates/)
 
   // TODO: Get vote: 0 to work
   // await vote(page, { title: proposalTwo.title, vote: 0 })
   await vote(cPage, { title: proposalOne.title, vote: 5 })
   await vote(page, { title: proposalOne.title, vote: 5 })
 
-  await page.reload()
-  await page.waitForLoadState('networkidle')
+  await waitForPhase(page, /Voting for non-delegates/)
   await vote(page, { title: proposalOne.title, vote: 3 })
   await vote(page, { title: proposalTwo.title, vote: 4 })
 

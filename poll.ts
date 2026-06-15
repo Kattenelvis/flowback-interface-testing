@@ -20,6 +20,18 @@ export async function fastForward(page: any, times = 1) {
   await page.locator('#poll-header-multiple-choices').click()
 }
 
+// Reload until the poll timeline reaches the expected phase. The phase advances
+// server-side (via fastForward on another page), so a single reload races the
+// change under load — reload-and-recheck instead of a fixed wait or networkidle.
+export async function waitForPhase(page: any, phase: RegExp) {
+  await expect(async () => {
+    await page.reload()
+    await expect(
+      page.locator('#poll-timeline').filter({ hasText: phase }),
+    ).toBeVisible({ timeout: 5000 })
+  }).toPass({ timeout: 30000 })
+}
+
 // Only works inside a group. One could use goToGroup before this
 export async function createPoll(page: any, { title = 'Test Poll', date = false, phase_time = 1 } = {}) {
   //Create a Poll
@@ -146,11 +158,12 @@ export async function vote(page: any, proposal = { title: 'Proposal Title', vote
   const track = page.locator(`#track-container-${idfy(proposal.title)}`)
 
   // Wait for a voting phase (delegate or non-delegate) and the proposal's vote
-  // track to render, instead of a fixed sleep.
+  // track to render, instead of a fixed sleep. Generous timeout: on CI the
+  // backend is slower to advance phases / propagate proposals than locally.
   await expect(page.locator('#poll-timeline').filter({
     hasText: /Delegate voting|Voting for non-delegates/
-  })).toBeVisible()
-  await expect(track).toBeVisible()
+  })).toBeVisible({ timeout: 15000 })
+  await expect(track).toBeVisible({ timeout: 15000 })
 
   await track
     .locator(`> div:nth-child(${2 + proposal.vote})`)
