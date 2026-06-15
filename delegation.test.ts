@@ -134,7 +134,7 @@ test('Delegate-History', async ({ page }) => {
 })
 
 test('Delegation-Override-Results', async ({ page }) => {
-  test.setTimeout(0)
+  test.setTimeout(60000)
   await register(page)
 
   const group = { name: 'Test Group Delegation Override ' + randomString(), public: true }
