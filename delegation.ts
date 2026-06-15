@@ -5,9 +5,16 @@ export async function becomeDelegate(page: any, group = { name: 'Test Group Dele
 
   // await page.locator('#delegate-group-select').selectOption({ label: group.name });
   await page.getByRole('textbox', { name: '0/' }).click()
-  await page.getByRole('textbox', { name: '0/' }).fill(group.name)
+  await page.getByRole('textbox', { name: '0/' }).pressSequentially(group.name)
   await expect(page.getByRole('button', { name: 'Become delegate' })).toBeVisible()
-  await page.getByRole('button', { name: 'Become delegate' }).click()
+
+  // Race condition between group search and clicking the become delegate button
+  // TODO: Fix race condition for less flakyness.
+  await page.waitForTimeout(3000)
+
+  const becomeDelegate = await page.getByRole('button', { name: 'Become delegate' })
+  await expect(becomeDelegate).toBeVisible()
+  await becomeDelegate.click()
 
   const confirm = page.getByRole('button', { name: 'Confirm' })
   await expect(confirm).toBeVisible()
