@@ -70,7 +70,7 @@ test('Poll-Start-To-Finish-Notification', async ({ page }) => {
     await expect(bPage.getByRole('button', { name: 'A new poll has been posted' }).first()).toBeVisible({ timeout: 3000 })
   }).toPass()
   await bPage.getByRole('button', { name: 'A new poll has been posted' }).nth(0).click()
-  await expect(bPage).toHaveURL(/\/groups\/\d+\/poll\/\d+/)
+  await expect(bPage).toHaveURL(/\/groups\/\d+\/polls\/\d+/)
   await expect(bPage.getByText(poll.title)).toBeVisible()
 
   // Scroll the bell up before opening so its dropdown ("Subscribe to All")
@@ -88,7 +88,7 @@ test('Poll-Start-To-Finish-Notification', async ({ page }) => {
     await expect(bPage.getByRole('button', { name: 'A new comment has been posted' }).first()).toBeVisible({ timeout: 3000 })
   }).toPass()
   await bPage.getByRole('button', { name: 'A new comment has been posted' }).nth(0).click()
-  await expect(bPage).toHaveURL(/\/groups\/\d+\/poll\/\d+/)
+  await expect(bPage).toHaveURL(/\/groups\/\d+\/polls\/\d+/)
   await expect(bPage.getByText(poll.title)).toBeVisible()
 
   await fastForward(page, 6)
