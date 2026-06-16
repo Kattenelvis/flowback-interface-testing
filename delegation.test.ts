@@ -184,8 +184,14 @@ test('Delegation-Override-Results', async ({ page }) => {
   // server-side via the fastForward above), then confirm every proposal track
   // has rendered before voting — under CI load proposal 3 sometimes lagged.
   await waitForPhase(cPage, /Delegate voting/)
-  for (const proposal of [proposalOne, proposalTwo, proposalThree])
-    await expect(cPage.locator(`#track-container-${idfy(proposal.title)}`)).toBeVisible()
+  // The timeline flips to delegate-voting before the proposal list finishes
+  // fetching, so a single check races the render (proposal 3 lagged on CI).
+  // Reload-retry until every track has rendered.
+  await expect(async () => {
+    await cPage.reload()
+    for (const proposal of [proposalOne, proposalTwo, proposalThree])
+      await expect(cPage.locator(`#track-container-${idfy(proposal.title)}`)).toBeVisible({ timeout: 5000 })
+  }).toPass({ timeout: 30000 })
 
   await vote(cPage, { title: proposalOne.title, vote: 1 })
   await vote(cPage, { title: proposalTwo.title, vote: 3 })
