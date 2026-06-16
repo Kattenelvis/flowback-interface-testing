@@ -44,17 +44,19 @@ export async function assignPermission(
     const addRoleButton = page.locator(`#plus-${idfy(user_name)}`)
     await expect(addRoleButton).toBeVisible()
 
-    // The + button toggles the role panel; make sure it ends up open
+    // The + button is a pure toggle of the role panel. Converge on "panel open
+    // with the role tag rendered" by clicking + only while the tag isn't
+    // visible — instead of blindly double-clicking, which could close a panel
+    // that was merely slow to render under CI load.
     const roleTag = page
         .getByRole('listitem')
         .locator(`#permission-${idfy(permission_name)}-${idfy(user_name)}`)
-    await addRoleButton.click()
-    try {
-        await expect(roleTag).toBeVisible({ timeout: 1000 })
-    } catch {
-        await addRoleButton.click()
-        await expect(roleTag).toBeVisible()
-    }
+    await expect(async () => {
+        if (!(await roleTag.isVisible())) {
+            await addRoleButton.click()
+            await expect(roleTag).toBeVisible({ timeout: 2000 })
+        }
+    }).toPass({ timeout: 15000 })
     await roleTag.click()
 
     await expect(page.getByText('Successfully updated permission')).toBeVisible()

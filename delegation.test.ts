@@ -134,7 +134,9 @@ test('Delegate-History', async ({ page }) => {
 })
 
 test('Delegation-Override-Results', async ({ page }) => {
-  test.setTimeout(60000)
+  // 4 users, full delegation + permission + multi-phase voting flow. ~45s
+  // locally, so 60s tipped over the edge under slower CI load.
+  test.setTimeout(120000)
   await register(page)
 
   const group = { name: 'Test Group Delegation Override ' + randomString(), public: true }
