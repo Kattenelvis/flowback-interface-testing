@@ -30,7 +30,10 @@ export async function createGroup(page: any, group: group = { name: 'Test Group'
     await page.getByRole('button', { name: 'Confirm' }).click()
     await page.waitForTimeout(500)
     await page.locator('.image-upload > input').nth(1).setInputFiles('./image.png')
-    await page.locator('#cropper-confirm').first().click()
+    const confirm = await page.locator('#cropper-confirm').first()
+    await expect(confirm).toBeVisible()
+    confirm.click()
+
     await page
       .locator('fieldset')
       .filter({ hasText: 'Public? Yes No' })
