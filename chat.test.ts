@@ -91,10 +91,11 @@ test('Direct-Chat-Via-Group', async ({ page }) => {
   await page.getByRole('button', { name: 'Members', exact: true }).click()
   await page.locator('.text-primary').click()
 
-  // Wait for the (empty) channel to finish loading so the optimistic message
-  // isn't clobbered when getRecentMessages resolves.
+  // Wait for the channel to finish loading (it always contains the creator's
+  // "joined the channel" info message) so the optimistic message isn't
+  // clobbered when getRecentMessages resolves.
   await expect(
-    page.getByText('Chat is currently empty, maybe say hello?'),
+    page.locator('#chat-window').getByText('joined the channel').first(),
   ).toBeVisible()
   await page.getByPlaceholder('Write a message...').click()
   await page.getByPlaceholder('Write a message...').fill('Hello!! :D')
