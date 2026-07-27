@@ -55,3 +55,10 @@ Reset database between tests
 ```bash
 docker compose down -v
 ```
+
+For working on it and clicking around for locators
+
+```bash
+npx playwright codegen http://localhost:8085
+
+```
