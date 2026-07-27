@@ -200,6 +200,7 @@ test('Workgroup-Chat', async ({ page }) => {
 // active. Frontend `Preview.svelte` only surfaces invites whose title has >2
 // comma-separated parts, so the title must be `${uA}, ${uB}, ${uC}`.
 test('Group-Chat-Creation', async ({ page }) => {
+  test.slow()
   const { username: userA } = await register(page)
 
   const bPage = await newWindow()

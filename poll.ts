@@ -96,10 +96,8 @@ export async function createProposal(page: any, { title = 'Test Proposal', descr
   // await page.getByRole('button', { name: 'Add Proposal' }).click()
   const titleBox = page.getByRole('textbox', { name: 'Title' })
   await expect(titleBox).toBeVisible()
-  await titleBox.click()
-  await titleBox.pressSequentially(title, { delay: 10 })
-  await page.locator('#proposal-textarea').click()
-  await page.locator('#proposal-textarea').pressSequentially(description, { delay: 10 })
+  await titleBox.fill(title)
+  await page.locator('#proposal-textarea').fill(description)
   await page.getByRole('button', { name: 'Confirm' }).click()
   await expect(page.getByText('Successfully added proposal').first()).toBeVisible()
 }

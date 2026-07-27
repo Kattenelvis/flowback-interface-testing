@@ -56,15 +56,14 @@ export async function createGroup(page: any, group: group = { name: 'Test Group'
 }
 
 export async function gotoGroup(page: any, group = { name: 'Test Group' }) {
-  await page.locator('#groups').click()
-  await page.getByPlaceholder('Search groups').click()
-  await page.getByPlaceholder('Search groups').fill('')
-  await page.getByPlaceholder('Search groups').pressSequentially(group.name, { delay: 20 })
-
-  const heading = page.getByRole('heading', { name: group.name, exact: true })
-  // Open the group and confirm we actually landed on the group page. Under load the
-  // search list re-renders and a click may not navigate, so retry the whole open.
+  // Older list requests can overwrite the filtered result under load, so retry
+  // the complete search and navigation.
   await expect(async () => {
+    await page.locator('#groups').click()
+    const search = page.getByPlaceholder('Search groups')
+    await search.fill(group.name)
+    await search.press('Enter')
+    const heading = page.getByRole('heading', { name: group.name, exact: true })
     await expect(heading.first()).toBeVisible()
     await heading.first().click()
     await expect(page.locator('#group-header-title')).toHaveText(group.name, { timeout: 5000 })
