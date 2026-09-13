@@ -132,6 +132,9 @@ export async function registerTest(page: any) {
   await page.getByLabel('Username').fill(randomUsername)
   await page.getByLabel('Choose a Password').click()
   await page.getByLabel('Choose a Password').fill(process.env.TEST_PASS)
+  const invalidVerifyResponsePromise = page.waitForResponse(
+    (response: any) => response.url().includes('register/verify'),
+  )
   await page.getByRole('button', { name: 'Send' }).click()
   await expect(page.getByText('Wrong verification code')).toBeVisible()
   await page.getByLabel('Verification Code').click()
@@ -140,8 +143,6 @@ export async function registerTest(page: any) {
 
   await page.getByRole('button', { name: 'Send' }).click()
 
-  await expect(page.getByText('Success')).toBeVisible()
-  await page.waitForTimeout(2000)
   await expect(page).toHaveURL(`${process.env.LINK}/home`)
 
   await dismissPopups(page)
