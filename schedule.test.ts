@@ -17,8 +17,14 @@ test('Create-Edit-Delete-Schedule-Event', async ({ page }) => {
   await page.getByLabel('Description').fill('This is a test event at 15th')
 
   // Fill end date (second datetime-local input)
-  const dateInputs = page.locator('input[type="datetime-local"]')
-  await dateInputs.nth(1).fill('2026-08-18T00:01')
+  const dateInputs = page.locator("input[type='datetime-local']")
+  const endDate = new Date(await dateInputs.nth(0).inputValue())
+  endDate.setHours(endDate.getHours() + 1)
+  const formatDateTime = (date: Date) => {
+    const pad = (value: number) => String(value).padStart(2, "0")
+    return date.getFullYear() + "-" + pad(date.getMonth() + 1) + "-" + pad(date.getDate()) + "T" + pad(date.getHours()) + ":" + pad(date.getMinutes())
+  }
+  await dateInputs.nth(1).fill(formatDateTime(endDate))
 
   // Test invalid meeting link
   // await page.getByLabel('Meeting Link').fill('hshshsh')
@@ -43,8 +49,10 @@ test('Create-Edit-Delete-Schedule-Event', async ({ page }) => {
   await page.getByLabel('Title').fill('newly edited title')
 
   // Change end date
-  const editDateInputs = page.locator('input[type="datetime-local"]')
-  await editDateInputs.nth(1).fill('2027-08-16T00:01')
+  const editDateInputs = page.locator("input[type='datetime-local']")
+  const editedEndDate = new Date(await editDateInputs.nth(0).inputValue())
+  editedEndDate.setHours(editedEndDate.getHours() + 2)
+  await editDateInputs.nth(1).fill(formatDateTime(editedEndDate))
 
   // Submit the edit
   await page.locator('#Submit').click()

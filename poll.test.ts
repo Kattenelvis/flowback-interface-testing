@@ -41,7 +41,7 @@ test.describe('Basic-Post-Integration-Tests', () => {
 })
 
 test.skip('Area-Vote', async ({ page }) => {
-  test.setTimeout(0)
+  test.slow()
   await register(page)
 
   const group = { name: 'Test Poll Area ' + randomString(), public: false }

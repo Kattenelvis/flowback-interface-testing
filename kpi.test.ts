@@ -36,7 +36,7 @@ test('KPI-Create', async ({ page }) => {
 // perfect track record should completely dominate the Combined Bet display,
 // while User B's should count for nothing.
 test('KPI-Track-Record-Weighting', async ({ page }) => {
-  test.setTimeout(0)
+  test.slow()
 
   const group = { name: 'KPI Weighting ' + randomString(), public: true }
   const kpi = { name: 'Outcome ' + randomString(), values: [10, 20, 30] }
