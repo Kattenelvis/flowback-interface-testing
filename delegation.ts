@@ -28,12 +28,11 @@ export async function becomeDelegate(page: any, group = { name: 'Test Group Dele
   // }
 }
 
-export async function delegateToUser(page: any, group: { name: string }) {
+export async function delegateToUser(page: any, group: { name: string }, username: string) {
   await page.getByRole('button', { name: 'Delegation', exact: true }).click()
-  await page.getByRole('textbox', { name: '0/' }).click()
-  await page.getByRole('textbox', { name: '0/' }).fill(group.name)
-  await expect(page.getByRole('radio').first()).toBeVisible()
-  await page.getByRole('radio').first().check()
-  await expect(page.getByRole('radio').first()).toBeChecked()
+  await page.getByPlaceholder('Search groups').fill(group.name)
+  const delegateRadio = page.getByRole('radio', { name: username })
+  await expect(delegateRadio).toBeVisible()
+  await delegateRadio.check()
+  await expect(delegateRadio).toBeChecked()
 }
-
