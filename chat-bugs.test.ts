@@ -24,18 +24,18 @@ const sendChatMessage = async (p: any, text: string) => {
   }).toPass({ timeout: 20000 })
 }
 
-// Create a "+ New Group" chat inviting the given usernames.
+// Create a "New group" chat inviting the given usernames.
 const createGroupChat = async (p: any, title: string, invitees: string[]) => {
   await openChatIcon(p)
-  await p.getByRole('button', { name: '+ New Group' }).click()
+  await p.getByRole('button', { name: 'New group' }).click()
   await p.getByLabel('Chatgroup Name').fill(title)
-  await p.getByRole('button', { name: 'avatar + Invite user' }).nth(1).click()
+  await p.getByRole('button', { name: 'Add members' }).click()
   for (const name of invitees) {
     await p.getByRole('textbox', { name: 'User to invite' }).fill(name)
-    await p.getByRole('button', { name: 'Add Me!', exact: true }).click()
+    await p.getByRole('button', { name: 'Add', exact: true }).click()
   }
   await p.keyboard.press('Escape')
-  await p.getByRole('button', { name: 'Confirm', exact: true }).click()
+  await p.getByRole('button', { name: 'Create group', exact: true }).click()
   // On success the channel opens for the creator with their join info message;
   // waiting for it ensures the channel + invites exist before other users look.
   await expect(

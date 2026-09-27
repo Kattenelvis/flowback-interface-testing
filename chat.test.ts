@@ -89,7 +89,7 @@ test('Direct-Chat-Via-Group', async ({ page }) => {
   await gotoGroup(bPage, group)
 
   await page.getByRole('button', { name: 'Members', exact: true }).click()
-  await page.locator('.text-primary').click()
+  await page.getByRole('button', { name: 'Send message' }).first().click()
 
   // Wait for the channel to finish loading (it always contains the creator's
   // "joined the channel" info message) so the optimistic message isn't
@@ -102,7 +102,7 @@ test('Direct-Chat-Via-Group', async ({ page }) => {
   await page.locator('form > button:nth-child(2)').click()
 
   await bPage.getByRole('button', { name: 'Members', exact: true }).click()
-  await bPage.locator('.text-primary').click()
+  await bPage.getByRole('button', { name: 'Send message' }).first().click()
   // Wait until A's message has loaded before B sends, so B's message survives
   // the getRecentMessages fetch.
   await expect(
@@ -116,7 +116,7 @@ test('Direct-Chat-Via-Group', async ({ page }) => {
   await expect(page.locator('#chat-window').getByText('Hello!! :D')).toHaveCount(2)
   await expect(bPage.locator('#chat-window').getByText('Hello!! :D')).toHaveCount(2)
 
-  await page.getByRole('button', { name: 'Close modal' }).click()
+  await page.getByRole('button', { name: 'Close chat' }).click()
 
   await deleteGroup(page, group)
 })
@@ -187,10 +187,10 @@ test('Workgroup-Chat', async ({ page }) => {
   await expect(page.locator('#chat-window').getByText('Hello!! :D')).toHaveCount(2)
   await expect(bPage.locator('#chat-window').getByText('Hello!! :D')).toHaveCount(2)
 
-  await page.getByRole('button', { name: 'Close modal' }).click()
+  await page.getByRole('button', { name: 'Close chat' }).click()
 })
 
-// Multi-user "+ New Group" chat: creator A invites B and C, both accept the
+// Multi-user "New group" chat: creator A invites B and C, both accept the
 // invite, and all three exchange messages in the shared channel.
 //
 // Backend flow (flowback-backend `user_get_chat_channel`): creating a chat with
@@ -217,26 +217,24 @@ test('Group-Chat-Creation', async ({ page }) => {
   // Error functionality: confirming with a title but no invited members means
   // the only participant is the creator, so the backend rejects it ("Cannot
   // create a chat with yourself") and the frontend shows the error toast.
-  await page.getByRole('button', { name: '+ New Group' }).click()
+  await page.getByRole('button', { name: 'New group' }).click()
   await page.getByRole('button', { name: 'Cancel' }).click()
-  await page.getByRole('button', { name: '+ New Group' }).click()
+  await page.getByRole('button', { name: 'New group' }).click()
   await page.getByLabel('Chatgroup Name').fill(title)
-  await page.getByRole('button', { name: 'Confirm' }).click()
+  await page.getByRole('button', { name: 'Create group' }).click()
   await expect(page.getByText('Failed to created group chat')).toBeVisible()
 
-  // Invite B and C. There are two "+ Invite user" buttons while creating a group
-  // (Preview's own UserSearch + CreateChatGroup's); the second is the one inside
-  // the create-group form.
-  await page.getByRole('button', { name: 'avatar + Invite user' }).nth(1).click()
+  // Invite B and C.
+  await page.getByRole('button', { name: 'Add members' }).click()
   await page.getByRole('textbox', { name: 'User to invite' }).fill(userB)
-  await page.getByRole('button', { name: 'Add Me!', exact: true }).click()
+  await page.getByRole('button', { name: 'Add', exact: true }).click()
   await page.getByRole('textbox', { name: 'User to invite' }).fill(userC)
-  await page.getByRole('button', { name: 'Add Me!', exact: true }).click()
+  await page.getByRole('button', { name: 'Add', exact: true }).click()
   // Close the invite modal (multiple visible "Close modal" buttons exist, so use
   // Escape rather than an index-based locator).
   await page.keyboard.press('Escape')
 
-  await page.getByRole('button', { name: 'Confirm', exact: true }).click()
+  await page.getByRole('button', { name: 'Create group', exact: true }).click()
 
   // On success the new channel opens for the creator. It already contains a
   // "joined the channel" info message, so wait for that to load before sending
