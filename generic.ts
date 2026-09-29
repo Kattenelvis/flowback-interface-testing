@@ -106,9 +106,10 @@ export async function registerTest(page: any) {
   await page.getByLabel('Email').click()
   await page.getByLabel('Email').fill(randomEmail)
   // await page.getByLabel('Email').fill('a@a.se')
-  await page.getByRole('button', { name: 'Send' }).click()
-  await expect(page.getByText('You must accept terms of')).toBeVisible()
+  // Registration is blocked until the terms of service are accepted
+  await expect(page.getByRole('button', { name: 'Send' })).toBeDisabled()
   await page.getByLabel('Yes').check()
+  await expect(page.getByRole('button', { name: 'Send' })).toBeEnabled()
   await page.getByRole('button', { name: 'Send' }).click()
   // await expect(page.getByText('ail already exists.')).toBeVisible()
 
