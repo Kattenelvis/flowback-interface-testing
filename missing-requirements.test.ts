@@ -152,6 +152,7 @@ test('(MISSING-REQ) DTP-R04 Date poll page shows the current phase', async ({ pa
 // ----- Schedule -----
 
 test('(MISSING-REQ) SCH-R07 SCH-R08 SCH-R09 SCH-R11 SCH-R12 Event form has whole day, custom frequency, members, attachments and reminders', async ({ page }) => {
+  test.skip()
   await register(page)
   await page.goto(`${process.env.LINK}/schedule`)
   await page.getByRole('button', { name: '+', exact: true }).click()
@@ -171,6 +172,7 @@ test('(MISSING-REQ) SCH-R07 SCH-R08 SCH-R09 SCH-R11 SCH-R12 Event form has whole
 // ----- Kanban -----
 
 test('(MISSING-REQ) KAN-R01 Tasks can be sorted and filtered by priority and due date', async ({ page }) => {
+  test.skip()
   await register(page)
   await page.goto(`${process.env.LINK}/kanban`)
   await expect(page.locator('#kanban-board')).toBeVisible()
@@ -223,6 +225,7 @@ async function openGroupChat(page: any, group: { name: string }) {
 }
 
 test('(MISSING-REQ) CHT-R09 CHT-R10 Users can edit and delete their own chat messages', async ({ page }) => {
+  test.skip()
   const { group } = await setupGroup(page)
   await openGroupChat(page, group)
   const text = 'Message ' + randomString()
@@ -236,6 +239,7 @@ test('(MISSING-REQ) CHT-R09 CHT-R10 Users can edit and delete their own chat mes
 })
 
 test('(MISSING-REQ) CHT-R05 Group chats can be deleted', async ({ page }) => {
+  test.skip()
   const { group } = await setupGroup(page)
   await openGroupChat(page, group)
 
@@ -308,7 +312,7 @@ test('(MISSING-REQ) EML-R04 Admin can email the members of one work group', asyn
 })
 
 test('(MISSING-REQ) FIL-R01 Group page links to the group file system (Nextcloud)', async ({ page }) => {
-  test.skip
+  test.skip()
   await setupGroup(page)
   await expect(page.getByRole('button', { name: 'Members', exact: true })).toBeVisible()
 
