@@ -69,3 +69,61 @@ test('Create-Edit-Delete-Schedule-Event', async ({ page }) => {
   await page.locator('#Delete').click()
   await expect(page.getByText('Successfully deleted event')).toBeVisible()
 })
+
+// SCH-R02: the schedule can switch between month, week and day views
+test('Schedule-Switch-Views', async ({ page }) => {
+  await register(page)
+  await page.goto(`${process.env.LINK}/schedule`)
+
+  const title = page.locator('.fc-toolbar-title')
+  await expect(page.locator('.fc-dayGridMonth-view')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Month', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.getByRole('button', { name: 'Next month' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Week', exact: true }).click()
+  await expect(page.locator('.fc-timeGridWeek-view')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Week', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(page.locator('.fc-col-header-cell')).toHaveCount(7)
+  await expect(page.getByRole('button', { name: 'Next week' })).toBeVisible()
+
+  await page.getByRole('button', { name: 'Day', exact: true }).click()
+  await expect(page.locator('.fc-timeGridDay-view')).toBeVisible()
+  await expect(page.locator('.fc-col-header-cell')).toHaveCount(1)
+
+  // Navigation steps one day at a time in the day view
+  const dayTitle = await title.innerText()
+  await page.getByRole('button', { name: 'Next day' }).click()
+  await expect(title).not.toHaveText(dayTitle)
+
+  await page.getByRole('button', { name: 'Month', exact: true }).click()
+  await expect(page.locator('.fc-dayGridMonth-view')).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Next month' })).toBeVisible()
+})
+
+// On a phone the view switcher gets its own row; rotating the phone re-renders the calendar,
+// which must keep the chosen view and date
+test('Schedule-Switch-Views-Mobile', async ({ page }) => {
+  await page.setViewportSize(PHONE)
+  await register(page)
+  await page.goto(`${process.env.LINK}/schedule`)
+  await expect(page.locator('.fc-dayGridMonth-view')).toBeVisible()
+
+  for (const [name, view] of [['Week', 'timeGridWeek'], ['Day', 'timeGridDay'], ['Month', 'dayGridMonth']]) {
+    const button = page.getByRole('button', { name, exact: true })
+    await expect(button).toBeInViewport({ ratio: 1 })
+    await button.click()
+    await expect(page.locator(`.fc-${view}-view`)).toBeVisible()
+  }
+
+  await page.getByRole('button', { name: 'Week', exact: true }).click()
+  await page.getByRole('button', { name: 'Next week' }).click()
+  const firstDay = await page.locator('.fc-col-header-cell').first().getAttribute('data-date')
+
+  await page.setViewportSize({ width: PHONE.height, height: PHONE.width })
+  // The add button only gets its full label once the calendar has re-rendered for the wider screen
+  await expect(page.getByRole('button', { name: '+ Create Event' })).toBeVisible()
+  await expect(page.locator('.fc-timeGridWeek-view')).toBeVisible()
+  await expect(page.locator('.fc-col-header-cell').first()).toHaveAttribute('data-date', firstDay!)
+})
+
+const PHONE = { width: 390, height: 844 }
