@@ -62,3 +62,10 @@ For working on it and clicking around for locators
 npx playwright codegen http://localhost:8085
 
 ```
+
+Best for looking at the tests and checking the results, best in use with letting AI finding bugs and verifying its results:
+
+```bash
+npx playwright test . --project chromium --workers 2 --reporter html --trace on
+npx playwright show-report
+```
