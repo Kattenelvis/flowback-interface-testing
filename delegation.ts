@@ -36,3 +36,17 @@ export async function delegateToUser(page: any, group: { name: string }, usernam
   await delegateRadio.check()
   await expect(delegateRadio).toBeChecked()
 }
+
+// Opens the first delegate's history for a group and waits until the given poll
+// shows up in it. Delegate history is populated asynchronously (celery), so reload
+// the delegations page and reopen the history until the entry arrives.
+export async function openDelegateHistory(page: any, group: { name: string }, pollTitle: string) {
+  await expect(async () => {
+    await page.goto(`${process.env.LINK}/delegations`)
+    await page.getByRole('textbox', { name: '0/' }).fill(group.name)
+    await page.getByRole('link', { name: 'History' }).first().click()
+    await expect(page.getByText(/Delegate history for/)).toBeVisible({ timeout: 3000 })
+    await expect(page.getByRole('link', { name: pollTitle })).toBeVisible({ timeout: 3000 })
+  }).toPass()
+  return page.getByRole('listitem').filter({ has: page.getByRole('link', { name: pollTitle }) })
+}

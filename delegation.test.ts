@@ -2,7 +2,7 @@ import { test, chromium, expect } from '@playwright/test'
 import { register, newWindow, randomString } from './generic'
 import { createPoll, createProposal, fastForward, goToPost, vote, waitForPhase } from './poll'
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group'
-import { becomeDelegate, delegateToUser } from './delegation'
+import { becomeDelegate, delegateToUser, openDelegateHistory } from './delegation'
 import { idfy } from './generic'
 import 'dotenv/config'
 import { assignPermission, createPermission } from './permission'
@@ -100,17 +100,8 @@ test('Delegate-History', async ({ page }) => {
     await fastForward(page, 2)
     await fastForward(page, 1)
 
-    // Delegate history is populated asynchronously (celery), so reload the
-    // delegations page and reopen the group's history until the entry arrives.
-    await expect(async () => {
-        await page.goto(`${process.env.LINK}/delegations`)
-        await page.getByRole('textbox', { name: '0/' }).fill(group.name)
-        await page.getByRole('link', { name: 'History' }).first().click()
-        await expect(page.getByText(/Delegate history for/)).toBeVisible({ timeout: 3000 })
-        // Shows-Vote: verify poll and vote entry appear
-        await expect(page.getByRole('link', { name: poll.title })).toBeVisible({ timeout: 3000 })
-    }).toPass()
-    const historyPoll = page.getByRole('listitem').filter({ has: page.getByRole('link', { name: poll.title }) })
+    // Shows-Vote: verify poll and vote entry appear
+    const historyPoll = await openDelegateHistory(page, group, poll.title)
     await expect(historyPoll).toBeVisible()
     await expect(page.getByText(/Delegate voted:/)).toBeVisible()
 
