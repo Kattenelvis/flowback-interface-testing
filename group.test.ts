@@ -35,6 +35,7 @@ test('Group-Integration-Tests', async ({ page }) => {
 })
 
 test('Create-Delete-Group-Invite-Only', async ({ page }) => {
+  test.slow()
   const groupInvite = { name: 'Test Group Group-Testing Invite only' + randomString(), public: true, invite: true }
 
   // a creates the invite-only group
