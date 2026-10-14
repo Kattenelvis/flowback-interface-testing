@@ -240,7 +240,7 @@ test('Delegation-Override-Results', async ({ page }) => {
 })
 
 test('Delegation-Self-Delegation-Results', async ({ page }) => {
-    // 4 users, three self-delegations + permission + multi-phase voting flow
+    // 5 users, three self-delegations + permission + multi-phase voting flow
     test.setTimeout(120000)
 
     const group = { name: 'Test Group Self Delegation ' + randomString(), public: true }
@@ -252,14 +252,18 @@ test('Delegation-Self-Delegation-Results', async ({ page }) => {
     // X: delegate who self-delegates, then overrides it with a personal vote
     // Y: delegate who self-delegates and has Z delegating to them
     // W: delegate without voting rights who self-delegates
+    // V: delegates to Y, then overrides one proposal; the rest of V's ballot must
+    //    come from Y's vote, not from whichever delegate happens to be listed first
     const yPage = await newWindow()
     const zPage = await newWindow()
     const wPage = await newWindow()
+    const vPage = await newWindow()
 
     const x = await register(page)
     const y = await register(yPage)
     await register(zPage)
     const w = await register(wPage)
+    await register(vPage)
 
     await createGroup(page, group)
     await selfDelegate(page, group, x.username)
@@ -269,6 +273,9 @@ test('Delegation-Self-Delegation-Results', async ({ page }) => {
 
     await joinGroup(zPage, group)
     await delegateToUser(zPage, group, y.username)
+
+    await joinGroup(vPage, group)
+    await delegateToUser(vPage, group, y.username)
 
     await joinGroup(wPage, group)
     await gotoGroup(page, group)
@@ -286,6 +293,7 @@ test('Delegation-Self-Delegation-Results', async ({ page }) => {
 
     await goToPost(yPage, poll)
     await goToPost(wPage, poll)
+    await goToPost(vPage, poll)
 
     await fastForward(page, 2)
 
@@ -309,6 +317,10 @@ test('Delegation-Self-Delegation-Results', async ({ page }) => {
     await vote(page, { title: proposalTwo.title, vote: 0 })
     await vote(page, { title: proposalThree.title, vote: 1 })
 
+    // V only changes proposal 3, keeping Y's 4 and 1 on the others
+    await waitForPhase(vPage, /Voting for non-delegates/)
+    await vote(vPage, { title: proposalThree.title, vote: 5 })
+
     // W can't vote personally
     await waitForPhase(wPage, /Voting for non-delegates/)
     await expect(wPage.locator(`#track-container-${idfy(proposalOne.title)}`)).toContainClass('disabled')
@@ -323,8 +335,9 @@ test('Delegation-Self-Delegation-Results', async ({ page }) => {
     const resultThree = page.locator('div.border-gray-300.border-b-2').filter({ hasText: proposalThree.title }).first()
 
     // X's personal vote replaces their self-delegation (5, 0, 1), Y's delegate vote
-    // counts for Y and Z (2 × (4, 1, 2)), and W's delegate vote counts for nobody
-    await expect(resultOne).toContainText('Points: 13')
-    await expect(resultTwo).toContainText('Points: 2')
-    await expect(resultThree).toContainText('Points: 5')
+    // counts for Y and Z (2 × (4, 1, 2)), V votes Y's ballot with proposal 3 changed
+    // (4, 1, 5), and W's delegate vote counts for nobody
+    await expect(resultOne).toContainText('Points: 17')
+    await expect(resultTwo).toContainText('Points: 3')
+    await expect(resultThree).toContainText('Points: 10')
 })
