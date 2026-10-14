@@ -2,7 +2,7 @@ import { test, chromium, expect } from '@playwright/test'
 import { register, newWindow, randomString } from './generic'
 import { createPoll, createProposal, fastForward, goToPost, vote, waitForPhase } from './poll'
 import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group'
-import { becomeDelegate, delegateToUser, openDelegateHistory } from './delegation'
+import { becomeDelegate, delegateToUser, openDelegateHistory, selfDelegate } from './delegation'
 import { idfy } from './generic'
 import 'dotenv/config'
 import { assignPermission, createPermission } from './permission'
@@ -237,4 +237,94 @@ test('Delegation-Override-Results', async ({ page }) => {
     await expect(resultOne).toContainText('Points: 9')
     await expect(resultTwo).toContainText('Points: 12')
     await expect(resultThree).toContainText('Points: 3')
+})
+
+test('Delegation-Self-Delegation-Results', async ({ page }) => {
+    // 4 users, three self-delegations + permission + multi-phase voting flow
+    test.setTimeout(120000)
+
+    const group = { name: 'Test Group Self Delegation ' + randomString(), public: true }
+    const poll = { title: 'Test Poll Self Delegation ' + randomString() }
+    const proposalOne = { title: 'Proposal 1 ' + randomString() }
+    const proposalTwo = { title: 'Proposal 2 ' + randomString() }
+    const proposalThree = { title: 'Proposal 3 ' + randomString() }
+
+    // X: delegate who self-delegates, then overrides it with a personal vote
+    // Y: delegate who self-delegates and has Z delegating to them
+    // W: delegate without voting rights who self-delegates
+    const yPage = await newWindow()
+    const zPage = await newWindow()
+    const wPage = await newWindow()
+
+    const x = await register(page)
+    const y = await register(yPage)
+    await register(zPage)
+    const w = await register(wPage)
+
+    await createGroup(page, group)
+    await selfDelegate(page, group, x.username)
+
+    await joinGroup(yPage, group)
+    await selfDelegate(yPage, group, y.username)
+
+    await joinGroup(zPage, group)
+    await delegateToUser(zPage, group, y.username)
+
+    await joinGroup(wPage, group)
+    await gotoGroup(page, group)
+    await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click')
+    const noVoting = 'No Voting ' + randomString()
+    await createPermission(page, group, [], noVoting)
+    await assignPermission(page, group, noVoting, w.username)
+    await selfDelegate(wPage, group, w.username)
+
+    await gotoGroup(page, group)
+    await createPoll(page, poll)
+    await createProposal(page, proposalOne)
+    await createProposal(page, proposalTwo)
+    await createProposal(page, proposalThree)
+
+    await goToPost(yPage, poll)
+    await goToPost(wPage, poll)
+
+    await fastForward(page, 2)
+
+    const delegateVotes: [any, number[]][] = [
+        [page, [1, 2, 3]],
+        [yPage, [4, 1, 2]],
+        [wPage, [5, 5, 5]],
+    ]
+    for (const [delegatePage, scores] of delegateVotes) {
+        await waitForPhase(delegatePage, /Delegate voting/)
+        await vote(delegatePage, { title: proposalOne.title, vote: scores[0] })
+        await vote(delegatePage, { title: proposalTwo.title, vote: scores[1] })
+        await vote(delegatePage, { title: proposalThree.title, vote: scores[2] })
+    }
+
+    await fastForward(page, 1)
+
+    // X overrides their own delegate vote
+    await waitForPhase(page, /Voting for non-delegates/)
+    await vote(page, { title: proposalOne.title, vote: 5 })
+    await vote(page, { title: proposalTwo.title, vote: 0 })
+    await vote(page, { title: proposalThree.title, vote: 1 })
+
+    // W can't vote personally
+    await waitForPhase(wPage, /Voting for non-delegates/)
+    await expect(wPage.locator(`#track-container-${idfy(proposalOne.title)}`)).toContainClass('disabled')
+    await expect(wPage.getByText('You are not allowed to vote').first()).toBeVisible()
+
+    await fastForward(page, 1)
+
+    await expect(page.getByText('Results', { exact: true })).toBeVisible()
+
+    const resultOne = page.locator('div.border-gray-300.border-b-2').filter({ hasText: proposalOne.title }).first()
+    const resultTwo = page.locator('div.border-gray-300.border-b-2').filter({ hasText: proposalTwo.title }).first()
+    const resultThree = page.locator('div.border-gray-300.border-b-2').filter({ hasText: proposalThree.title }).first()
+
+    // X's personal vote replaces their self-delegation (5, 0, 1), Y's delegate vote
+    // counts for Y and Z (2 × (4, 1, 2)), and W's delegate vote counts for nobody
+    await expect(resultOne).toContainText('Points: 13')
+    await expect(resultTwo).toContainText('Points: 2')
+    await expect(resultThree).toContainText('Points: 5')
 })

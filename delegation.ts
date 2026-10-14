@@ -18,7 +18,11 @@ export async function becomeDelegate(page: any, group = { name: 'Test Group Dele
 
   const confirm = page.getByRole('button', { name: 'Confirm' })
   await expect(confirm).toBeVisible()
+  const created = page.waitForResponse(
+    (response: any) => response.url().includes('/delegate/pool/create') && response.request().method() === 'POST',
+  )
   await confirm.click()
+  expect((await created).ok(), 'Becoming delegate failed').toBeTruthy()
   // // Check if already a delegate
   // if (!(await page.getByText('Stop being delegate').isVisible())) {
   //   // await page.getByRole('button', { name: 'Stop being delegate' }).click();
@@ -33,8 +37,22 @@ export async function delegateToUser(page: any, group: { name: string }, usernam
   await page.getByPlaceholder('Search groups').fill(group.name)
   const delegateRadio = page.getByRole('radio', { name: username })
   await expect(delegateRadio).toBeVisible()
+  // The radio shows as checked right away, but the delegation only counts once its
+  // tags are saved (delegate/update) — leaving the page before that drops them
+  const saved = page.waitForResponse(
+    (response: any) => response.url().includes('/delegate/update') && response.request().method() === 'POST',
+  )
   await delegateRadio.check()
+  expect((await saved).ok(), `Delegating to ${username} failed`).toBeTruthy()
   await expect(delegateRadio).toBeChecked()
+}
+
+// A delegate can only delegate to themselves. That makes their delegate vote count
+// for themselves too, unless they vote personally in the voting phase.
+export async function selfDelegate(page: any, group: { name: string }, username: string) {
+  await becomeDelegate(page, group)
+  await page.getByRole('button', { name: 'Cancel' }).click()
+  await delegateToUser(page, group, username)
 }
 
 // Opens the first delegate's history for a group and waits until the given poll
