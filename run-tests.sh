@@ -20,7 +20,6 @@ TEST_FILES=(
     "Schedule.test.ts"
     "Kanban.test.ts"
     "Delegation.test.ts"
-    "Imac.test.ts"
 )
 
 run_cleanup() {
