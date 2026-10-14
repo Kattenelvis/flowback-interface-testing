@@ -86,8 +86,15 @@ export async function joinGroup(page: any, group = { name: 'Test Group' }) {
   const joinButton = page.locator(`#join-${idfy(group.name)}`)
   await expect(joinButton).toBeVisible({ timeout: 10000 })
 
-  if ((await joinButton.innerText()).trim() === 'Join' || (await joinButton.innerText()).trim() === 'Ask to join')
+  if ((await joinButton.innerText()).trim() === 'Join' || (await joinButton.innerText()).trim() === 'Ask to join') {
+    // Wait for the join to land, otherwise a page opened right after (e.g. delegations)
+    // can fetch the user's groups before the membership exists
+    const joined = page.waitForResponse(
+      (response: any) => response.url().includes('/join') && response.request().method() === 'POST',
+    )
     await joinButton.click()
+    expect((await joined).ok(), `Joining "${group.name}" failed`).toBeTruthy()
+  }
 }
 
 export async function deleteGroup(page: any, group = { name: 'Test Group', public: false }) {

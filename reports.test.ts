@@ -4,8 +4,8 @@ import { createGroup, deleteGroup, gotoGroup, joinGroup } from './group'
 import { createThread } from './thread'
 import 'dotenv/config'
 
-// Reports live in the group's Admin Settings (/groups/<id>/edit?page=reports),
-// not in user settings. Only admins of the group can see them.
+// Reports live on the group page next to the other admin actions (/groups/<id>?page=reports),
+// not in user settings or Admin Settings. Only admins of the group can see them.
 test('Reports-Group-Admin', async ({ page }) => {
     // Two registrations plus a thread and a report; allow for parallel load
     test.slow()
@@ -19,7 +19,7 @@ test('Reports-Group-Admin', async ({ page }) => {
     await gotoGroup(page, group)
     const groupId = page.url().match(/\/groups\/(\d+)/)?.[1]
     expect(groupId).toBeTruthy()
-    const reportsUrl = `${process.env.LINK}/groups/${groupId}/edit?page=reports`
+    const reportsUrl = `${process.env.LINK}/groups/${groupId}?page=reports`
 
     await createThread(page, group)
 
@@ -38,7 +38,7 @@ test('Reports-Group-Admin', async ({ page }) => {
     await page.goto(reportsUrl)
     const reportsApiResponse = await reportsResponse
     expect(reportsApiResponse.status()).toBe(200)
-    await expect(page.getByRole('heading', { name: 'Admin Settings' })).toBeVisible()
+    await expect(page.locator('#group-header-title')).toHaveText(group.name)
 
     const reportButton = page.getByRole('button', { name: reportTitle })
     await expect(reportButton).toBeVisible()
@@ -54,13 +54,17 @@ test('Reports-Group-Admin', async ({ page }) => {
     await modal.getByRole('button', { name: 'View Post' }).click()
     await expect(page).toHaveURL(new RegExp(`/groups/${groupId}/thread/\\d+`))
 
-    // Switching admin tabs keeps the url in sync
-    await page.goto(reportsUrl)
+    // The admin sidebar button opens the reports and keeps the url in sync
+    await gotoGroup(page, group)
+    await page.locator('#reports-sidebar-button').click()
+    await expect(page).toHaveURL(new RegExp(`/groups/${groupId}\\?page=reports$`))
     await expect(reportButton).toBeVisible()
-    await page.getByRole('button', { name: 'Permissions', exact: true }).click()
-    await expect(page).toHaveURL(new RegExp(`/groups/${groupId}/edit\\?page=perms$`))
 
-    // B is a member but not an admin: the reports tab redirects back to the group
+    // Reports are no longer part of Admin Settings
+    await page.getByRole('button', { name: 'Edit Group' }).click()
+    await expect(page.getByRole('heading', { name: 'Admin Settings' })).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Reports', exact: true })).toHaveCount(0)
+
     const bPage = await newWindow()
     await register(bPage)
     // joinGroup doesn't wait for the join to finish; navigating early would leave B a non-member
@@ -69,8 +73,14 @@ test('Reports-Group-Admin', async ({ page }) => {
     )
     await joinGroup(bPage, group)
     await joined
+    // B is a member but not an admin: no reports button, and linking to the reports shows nothing
+    const bGroupUser = bPage.waitForResponse(
+        (response: any) => response.url().includes(`group/${groupId}/users?user_id=`) && response.ok(),
+    )
     await bPage.goto(reportsUrl)
-    await expect(bPage).toHaveURL(new RegExp(`/groups/${groupId}(\\?.*)?$`))
+    await bGroupUser
+    await expect(bPage.locator('#group-header-title')).toHaveText(group.name)
+    await expect(bPage.locator('#reports-sidebar-button')).toHaveCount(0)
     await expect(bPage.getByText(reportTitle)).toHaveCount(0)
 
     // ...and the backend refuses to list the group's reports for B

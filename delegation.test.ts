@@ -129,8 +129,6 @@ test('Delegate-History', async ({ page }) => {
 })
 
 test('Delegation-Override-Results', async ({ page }) => {
-    // TODO: This test shouldn't be skipped but will for now due to flakyness
-    test.skip()
     // 4 users, full delegation + permission + multi-phase voting flow. ~45s
     // locally, so 60s tipped over the edge under slower CI load.
     test.setTimeout(120000)
@@ -216,8 +214,8 @@ test('Delegation-Override-Results', async ({ page }) => {
     await waitForPhase(cPage, /Voting for non-delegates/)
     await waitForPhase(page, /Voting for non-delegates/)
 
-    // TODO: Get vote: 0 to work
-    // await vote(page, { title: proposalTwo.title, vote: 0 })
+    // A overrides the delegate's 3 on proposal 2 with a 0
+    await vote(page, { title: proposalTwo.title, vote: 0 })
     await vote(cPage, { title: proposalOne.title, vote: 5 })
     await vote(page, { title: proposalOne.title, vote: 5 })
 

@@ -15,7 +15,13 @@ export async function fastForward(page: any, times = 1) {
     } catch {
       break
     }
+    // The frontend ignores Fast Forward clicks while the previous one is in flight,
+    // so wait for this one to land before clicking again
+    const forwarded = page.waitForResponse(
+      (response: any) => response.url().includes('/fast_forward') && response.request().method() === 'POST',
+    )
     await ffButton.click()
+    expect((await forwarded).ok(), 'Fast forward failed').toBeTruthy()
   }
   await page.locator('#poll-header-multiple-choices').click()
 }
@@ -98,8 +104,23 @@ export async function createProposal(page: any, { title = 'Test Proposal', descr
   await expect(titleBox).toBeVisible()
   await titleBox.fill(title)
   await page.locator('#proposal-textarea').fill(description)
+
+  // The previous proposal's success toast may still be on screen, so it can't tell
+  // us this one was created. Wait for this proposal's own request, then for the form
+  // to reset (the last step on success) — otherwise the next createProposal types
+  // into a form that is about to be cleared and that proposal is silently lost.
+  // A late poll reload can also close the form, which is just as good.
+  const created = page.waitForResponse(
+    (response: any) => response.url().includes('/proposal/create') && response.request().method() === 'POST',
+  )
   await page.getByRole('button', { name: 'Confirm' }).click()
+  expect((await created).ok(), `Creating proposal "${title}" failed`).toBeTruthy()
   await expect(page.getByText('Successfully added proposal').first()).toBeVisible()
+  await expect
+    .poll(() =>
+      titleBox.evaluateAll((inputs: HTMLInputElement[], title: string) => inputs.some((input) => input.value === title), title),
+    )
+    .toBe(false)
 }
 
 export async function predictionStatementCreate(
@@ -151,7 +172,7 @@ export async function predictionProbability(
 
 // Works for both delegate and normal voting
 export async function vote(page: any, proposal = { title: 'Proposal Title', vote: 1 }) {
-  expect(proposal.vote >= 0 && proposal.vote <= 5, 'Vote must be between 0 and 5')
+  expect(proposal.vote >= 0 && proposal.vote <= 5, 'Vote must be between 0 and 5').toBeTruthy()
 
   const track = page.locator(`#track-container-${idfy(proposal.title)}`)
 
@@ -163,10 +184,19 @@ export async function vote(page: any, proposal = { title: 'Proposal Title', vote
   })).toBeVisible({ timeout: 15000 })
   await expect(track).toBeVisible({ timeout: 15000 })
 
-  await track
-    .locator(`> div:nth-child(${2 + proposal.vote})`)
-    .first()
-    .click()
+  // Click the track at the score's position rather than on its snap-point dot: the
+  // current-score marker is drawn on top of the dot for the current score, so
+  // Playwright refuses to click that dot (e.g. voting 0 on an untouched slider).
+  const box = await track.boundingBox()
+  const x = Math.min(Math.max((proposal.vote / 5) * box.width, 1), box.width - 1)
+
+  // Every vote posts the whole ballot, so wait for this one to land before the
+  // next vote, reload or fast forward — otherwise ballots race or get aborted.
+  const voted = page.waitForResponse(
+    (response: any) => response.url().includes('/proposal/vote') && response.request().method() === 'POST',
+  )
+  await track.click({ position: { x, y: box.height / 2 } })
+  expect((await voted).ok(), `Voting ${proposal.vote} on "${proposal.title}" failed`).toBeTruthy()
 
   // await page.locator('#track-container-test-proposal > div:nth-child(4)').click();
   // await page.locator("#proposals-section").screenshot({ path: 'tests/voting.png', fullPage: true });
