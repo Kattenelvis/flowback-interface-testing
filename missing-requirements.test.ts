@@ -344,8 +344,8 @@ test('(MISSING-REQ) THR-R03 THR-R04 Thread attachments are uploaded and shown on
 test('(MISSING-REQ) WGR-R02 Admin can edit a work group', async ({ page }) => {
     await setupGroup(page)
     const workGroup = 'Work Group ' + randomString()
-    await page.getByRole('button', { name: 'Work Groups', exact: true }).click()
-    await page.getByRole('button', { name: '+ Add Workgroup' }).click()
+    await page.getByRole('button', { name: 'Teams', exact: true }).click()
+    await page.getByRole('button', { name: '+ Add Team' }).click()
     await page.getByRole('textbox', { name: /^Name/ }).fill(workGroup)
     await page.getByRole('button', { name: 'Create', exact: true }).click()
 

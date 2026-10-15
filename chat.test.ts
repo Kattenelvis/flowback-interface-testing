@@ -116,8 +116,8 @@ test('Workgroup-Chat', async ({ page }) => {
   await joinGroup(bPage, group)
   await gotoGroup(bPage, group)
 
-  await page.getByRole('button', { name: 'Work Groups' }).click()
-  await page.getByRole('button', { name: '+ Add Workgroup' }).click()
+  await page.getByRole('button', { name: 'Teams' }).click()
+  await page.getByRole('button', { name: '+ Add Team' }).click()
   await page.getByLabel('Name').click()
 
   const workgroup = 'Workgroup for chatting in yay' + randomString()
@@ -125,7 +125,7 @@ test('Workgroup-Chat', async ({ page }) => {
   await page.getByRole('button', { name: 'Create', exact: true }).click()
   await page.getByRole('button', { name: 'Join', exact: true }).click()
 
-  await bPage.getByRole('button', { name: 'Work Groups' }).click()
+  await bPage.getByRole('button', { name: 'Teams' }).click()
   await bPage.getByRole('button', { name: 'Join', exact: true }).click()
 
   // The chat preview list is only fetched when the Chat component first mounts.
