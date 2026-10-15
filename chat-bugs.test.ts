@@ -113,8 +113,7 @@ test('BUG-Accept-Enables-Channel-Without-Reload', async ({ page }) => {
   await bPage.reload()
   await openChatIcon(bPage)
   const bAccept = bPage.waitForResponse(
-    (r: any) =>
-      r.url().includes('/user/chat/invite') && r.request().method() === 'POST',
+    (r: any) => r.url().includes('/accept') && r.request().method() === 'POST',
   )
   await bPage.getByRole('button', { name: 'Accept' }).click()
   await bAccept
@@ -123,4 +122,63 @@ test('BUG-Accept-Enables-Channel-Without-Reload', async ({ page }) => {
   await expect(
     bPage.locator('button').filter({ hasText: title }).first(),
   ).toBeEnabled({ timeout: 8000 })
+})
+
+// BUG: Leaving a group chat deleted the whole chat for everyone. B leaves; A keeps
+// the chat, its history, and can keep talking in it.
+test('BUG-Leaving-Group-Chat-Keeps-It-For-Others', async ({ page }) => {
+  const { username: userA } = await register(page)
+  const bPage = await newWindow()
+  const { username: userB } = await register(bPage)
+
+  const title = `leave-${randomString()}`
+  await createGroupChat(page, title, [userB])
+  await sendChatMessage(page, 'Before B left')
+
+  await bPage.reload()
+  await openChatIcon(bPage)
+  await bPage.getByRole('button', { name: 'Accept' }).click()
+  await expect(bPage.locator('#chat-window').getByText('Before B left')).toBeVisible()
+
+  // The leave button is on B's chat entry, not only on the creator's
+  const bEntry = bPage.locator('div').filter({ has: bPage.getByRole('button', { name: title }) }).last()
+  await bEntry.getByRole('button', { name: 'Leave Group' }).click()
+  await bPage.getByRole('button', { name: 'Leave', exact: true }).click()
+  await expect(bPage.getByRole('button', { name: title })).toHaveCount(0)
+
+  // A sees B leave live, and the chat still works
+  await expect(page.locator('#chat-window').getByText(`${userB} left`)).toBeVisible({ timeout: 10000 })
+  await sendChatMessage(page, 'After B left')
+
+  await page.reload()
+  await openChatIcon(page)
+  await page.locator('button:enabled').filter({ hasText: title }).first().click()
+  await expect(page.locator('#chat-window').getByText('Before B left')).toBeVisible()
+  await expect(page.locator('#chat-window').getByText('After B left')).toBeVisible()
+
+  // B doesn't get the chat back after reloading
+  await bPage.reload()
+  await openChatIcon(bPage)
+  await expect(bPage.getByRole('button', { name: title })).toHaveCount(0)
+  expect(userA).toBeTruthy()
+})
+
+// BUG: Renaming a group chat only changed the name locally; it was gone after a reload.
+test('BUG-Rename-Group-Chat-Persists', async ({ page }) => {
+  await register(page)
+  const bPage = await newWindow()
+  const { username: userB } = await register(bPage)
+
+  const title = `rename-${randomString()}`
+  const renamed = `renamed-${randomString()}`
+  await createGroupChat(page, title, [userB])
+
+  await page.getByRole('button', { name: 'Participants' }).click()
+  await page.getByLabel('Chatgroup Name').last().fill(renamed)
+  await page.getByRole('button', { name: 'Save', exact: true }).click()
+  await expect(page.locator('#chat-window').getByText(`renamed the chat to ${renamed}`)).toBeVisible()
+
+  await page.reload()
+  await openChatIcon(page)
+  await expect(page.getByRole('button', { name: renamed })).toBeVisible()
 })
