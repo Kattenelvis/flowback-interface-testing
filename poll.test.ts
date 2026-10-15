@@ -367,6 +367,10 @@ test('Poll-Start-To-Finish', async ({ page }) => {
   await createProposal(page, proposal)
   await createProposal(page, proposal2)
 
+  await page.getByRole('button', { name: 'Comment' }).first().click()
+  await expect(page.getByPlaceholder('Write a comment...').first()).toHaveValue(/^#Test-Proposal/)
+  await page.getByRole('button', { name: 'Comment' }).first().click()
+
   // await predictionStatementCreate(page, proposal)
   //
   // await fastForward(page, 1)

@@ -206,6 +206,65 @@ test.describe(() => {
     await expect(dates.nth(0)).toHaveValue(`${dayOfThisMonth(15)}T10:00`)
     await expect(dates.nth(1)).toHaveValue(`${dayOfThisMonth(16)}T10:30`)
   })
+
+  // A repeating event is on every day however far ahead the calendar is, and keeps its time of day
+  // when the clocks change (which happens within 8 months from any date)
+  test('Schedule-Daily-Event-Months-Ahead', async ({ page }) => {
+    await register(page)
+    await page.goto(`${process.env.LINK}/schedule`)
+    await expect(page.locator('.fc-dayGridMonth-view')).toBeVisible()
+
+    const now = new Date()
+    const fifteenth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-15`
+
+    await page.getByRole('button', { name: '+ Create Event' }).click()
+    const title = 'Daily event ' + randomString()
+    await page.getByLabel('Title').fill(title)
+    const dates = page.locator("input[type='datetime-local']")
+    await dates.nth(0).fill(`${fifteenth}T10:00`)
+    await dates.nth(1).fill(`${fifteenth}T10:30`)
+    await page.locator('.schedule-form select').first().selectOption({ label: 'Daily' })
+    await page.locator('#Submit').click()
+    await expect(page.getByText('Successfully created event')).toBeVisible()
+
+    const occurrences = page.locator('.fc-daygrid-event', { hasText: title })
+    const days = page.locator('.fc-daygrid-day')
+    for (let month = 1; month <= 8; month++) {
+      await page.getByRole('button', { name: 'Next month' }).click()
+      await expect.poll(async () => (await occurrences.count()) === (await days.count())).toBe(true)
+      await expect
+        .poll(async () => [...new Set(await occurrences.locator('.fc-event-time').allInnerTexts())])
+        .toEqual(['10a'])
+    }
+  })
+
+  // The backend lists at most 50 events at a time, all of them are shown
+  test('Schedule-More-Than-50-Events', async ({ page }) => {
+    await register(page)
+    const token = await page.evaluate(() => localStorage.getItem('token'))
+    const [year, month, day] = await page.evaluate(() => {
+      const today = new Date()
+      return [today.getFullYear(), today.getMonth(), today.getDate()]
+    })
+
+    const title = 'Event ' + randomString()
+    for (let minute = 0; minute < 55; minute++) {
+      const start = new Date(Date.UTC(year, month, day, 10, minute))
+      const response = await page.request.post(`${process.env.LINK}/api/user/schedule/event/create`, {
+        headers: { Authorization: `Token ${token}` },
+        data: {
+          title: `${title} ${minute}`,
+          start_date: start.toISOString(),
+          end_date: new Date(start.getTime() + 60 * 1000).toISOString(),
+        },
+      })
+      expect(response.ok()).toBe(true)
+    }
+
+    await page.goto(`${process.env.LINK}/schedule`)
+    await page.getByRole('button', { name: 'Day', exact: true }).click()
+    await expect(page.locator('.fc-timegrid-event', { hasText: title })).toHaveCount(55)
+  })
 })
 
 const PHONE = { width: 390, height: 844 }
