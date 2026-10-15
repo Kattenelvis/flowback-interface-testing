@@ -28,7 +28,8 @@ test('Permissions', async ({ page }) => {
   // A creates an empty role and a full role
   const noPermission = 'No Permissions'
   const fullPermission = 'Full Permissions'
-  const allPerms = [...Array(17).keys()]
+  // One per permission toggle in the role form
+  const allPerms = [...Array(12).keys()]
 
   await page.getByRole('button', { name: 'Edit Group' }).dispatchEvent('click')
   await createPermission(page, group, [], noPermission)

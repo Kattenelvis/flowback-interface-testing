@@ -25,7 +25,7 @@ export async function selectProposal(page: any, title: string) {
 // far right edge of the probability bar is the only reliable way to hit 100%,
 // since the UI rounds the click position to the nearest 5%.
 export async function kpiBetFull(page: any, value: string | number) {
-  const bar = page.locator(`[aria-label="Set KPI probability for ${value}"] button`)
+  const bar = page.getByRole('slider', { name: `Set KPI probability for ${value}`, exact: true })
   await expect(bar).toBeVisible()
   const box = await bar.boundingBox()
   await bar.click({ position: { x: box.width - 2, y: box.height / 2 } })

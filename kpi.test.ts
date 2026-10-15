@@ -22,7 +22,10 @@ test('KPI-Create', async ({ page }) => {
   await page.getByText(kpi.name).isVisible()
   await page.getByText("KPI_TEST_DISABLED").isHidden()
 
-  await page.locator('div:nth-child(2) > div:nth-child(3) > .flex-1').click()
+  // Clicking the middle of the bar bets 50% on the value
+  const bar = page.getByRole('slider', { name: 'Set KPI probability for 3', exact: true })
+  await bar.click()
+  await expect(bar).toHaveAttribute('aria-valuenow', '50')
 })
 
 // Reproduces the backend's track-record weighting (flowback/poll/tests/test_kpi.py,
