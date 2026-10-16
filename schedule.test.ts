@@ -45,6 +45,9 @@ test('Create-Edit-Delete-Schedule-Event', async ({ page }) => {
   await page.locator('.fc-event', { hasText: 'Event at 15th' }).first().click()
   await page.waitForTimeout(300)
 
+  // An opened event is read-only until Edit is pressed
+  await page.locator('#Edit').click()
+
   // Edit the event title
   await page.getByLabel('Title').fill('newly edited title')
 
@@ -198,6 +201,7 @@ test.describe(() => {
 
     // Save it unchanged, then reload so the time shown comes straight from the backend
     await timedEvent.click()
+    await page.locator('#Edit').click()
     await expect(page.getByText(`Edit Event ${title}`)).toBeVisible()
     await page.locator('#Submit').click()
     await expect(page.getByText('Successfully edited event')).toBeVisible()
