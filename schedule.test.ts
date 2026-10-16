@@ -126,6 +126,44 @@ test('Schedule-Switch-Views-Mobile', async ({ page }) => {
   await expect(page.locator('.fc-col-header-cell').first()).toHaveAttribute('data-date', firstDay!)
 })
 
+// A repeating event can be subscribed to for reminders after its first occurrence has ended,
+// there are more occurrences to remind about
+test('Schedule-Subscribe-Repeating-Event-After-First-Occurrence', async ({ page }) => {
+  await register(page)
+  const token = await page.evaluate(() => localStorage.getItem('token'))
+
+  const title = 'Repeating event ' + randomString()
+  const start = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+  const response = await page.request.post(`${process.env.LINK}/api/user/schedule/event/create`, {
+    headers: { Authorization: `Token ${token}` },
+    data: {
+      title,
+      start_date: start.toISOString(),
+      end_date: new Date(start.getTime() + 30 * 60 * 1000).toISOString(),
+      repeat_frequency: 1,
+    },
+  })
+  expect(response.ok()).toBe(true)
+
+  await page.goto(`${process.env.LINK}/schedule`)
+  await expect(page.locator('.fc-dayGridMonth-view')).toBeVisible()
+  await page.getByRole('button', { name: 'Next month' }).click()
+
+  const now = new Date()
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 15)
+  const pad = (value: number) => String(value).padStart(2, '0')
+  const date = `${nextMonth.getFullYear()}-${pad(nextMonth.getMonth() + 1)}-15`
+  await page.locator(`.fc-daygrid-day[data-date="${date}"] .fc-daygrid-event`, { hasText: title }).click()
+
+  await page.locator('#notification-bell-event').click()
+  await page.getByRole('button', { name: 'All occurrences', exact: true }).click()
+  const subscribed = page.getByText('Subscribed', { exact: true })
+  const rejected = page.getByText('Event is not active or has already ended.')
+  await expect(subscribed.or(rejected)).toBeVisible()
+  await expect(rejected).toHaveCount(0)
+  await expect(subscribed).toBeVisible()
+})
+
 test.describe(() => {
   // The backend runs in UTC, so a timezone mix-up only shows when the browser is somewhere else
   test.use({ timezoneId: 'Europe/Stockholm' })

@@ -107,3 +107,158 @@ test('Kanban-Group', async ({ page }) => {
   await bPage.reload()
   await expect(bPage.locator('#Done-kanban-lane').getByText('group kanban edited', { exact: true })).toBeHidden()
 })
+
+const createEntry = async (page: any, title: string) => {
+  await page.locator('#Done-add').click()
+  const createModal = page.locator('#create-kanban-entry-modal')
+  await expect(createModal).toBeVisible()
+  await page.locator('#create-kanban-text').fill(title)
+  await page.locator('#create-kanban-textarea').fill(`${title} description`)
+  await page.locator('button', { hasText: 'Confirm' }).click()
+  await expect(createModal).toBeHidden()
+}
+
+const authorized = async (page: any) => ({
+  Authorization: `Token ${await page.evaluate(() => localStorage.getItem('token'))}`,
+})
+
+const createGroupApi = async (page: any, name: string) => {
+  const created = await page.request.post(`${process.env.LINK}/api/group/create`, {
+    headers: await authorized(page),
+    multipart: {
+      name,
+      description: 'Group for kanban tests',
+      direct_join: 'true',
+      public: 'true',
+      blockchain_id: String(Math.floor(Math.random() * 2147483647)),
+      hide_poll_users: 'false',
+    },
+  })
+  expect(created.ok()).toBe(true)
+  return (await created.json()) as number
+}
+
+// Creates a role in the group (as its admin) and assigns it to the user
+const assignRole = async (page: any, groupId: number, userId: number, role: Record<string, boolean | string>) => {
+  const created = await page.request.post(`${process.env.LINK}/api/group/${groupId}/permission/create`, {
+    headers: await authorized(page),
+    data: role,
+  })
+  expect(created.ok()).toBe(true)
+
+  const roles = await page.request.get(`${process.env.LINK}/api/group/${groupId}/permissions`, {
+    headers: await authorized(page),
+    params: { role_name: role.role_name as string },
+  })
+  const roleId = (await roles.json()).results[0].id
+
+  const assigned = await page.request.post(`${process.env.LINK}/api/group/${groupId}/user/update`, {
+    headers: await authorized(page),
+    data: { target_user_id: userId, permission: roleId, is_admin: false },
+  })
+  expect(assigned.ok(), await assigned.text()).toBe(true)
+}
+
+const changeGroup = async (page: any, groupId: number, entryId: number, targetGroupId: number) =>
+  page.request.post(`${process.env.LINK}/api/group/${groupId}/kanban/entry/change_group`, {
+    headers: await authorized(page),
+    data: { entry_id: entryId, target_group_id: targetGroupId },
+  })
+
+const groupEntryTitles = async (page: any, groupId: number) => {
+  const list = await page.request.get(`${process.env.LINK}/api/user/kanban/entry/list`, {
+    headers: await authorized(page),
+    params: { origin_type: 'group', origin_id: groupId },
+  })
+  return (await list.json()).results.map((entry: any) => entry.title)
+}
+
+// One user in two groups: moves a group entry from the first group to the second
+test('Kanban-ChangeGroup', async ({ page }) => {
+  test.slow()
+
+  const groupOne = { name: 'Test Kanban Move From ' + randomString() }
+  const groupTwo = { name: 'Test Kanban Move To ' + randomString() }
+
+  await register(page)
+  const groupOneId = await createGroupApi(page, groupOne.name)
+  const groupTwoId = await createGroupApi(page, groupTwo.name)
+
+  await page.goto(`${process.env.LINK}/groups/${groupOneId}`)
+  await page.locator('#group-tasks-sidebar-button').click()
+  await expect(page.locator('#kanban-board')).toBeVisible()
+  await createEntry(page, 'move me')
+
+  // The board lists entries from all joined groups, each card names its group
+  const card = page.locator('#Done-kanban-lane > ul > div', { hasText: 'move me' })
+  await expect(card).toContainText(`Group: ${groupOne.name}`)
+
+  // The group the entry is already in is not offered as a target
+  await card.getByText('move me', { exact: true }).click()
+  const kanbanEntryModal = page.locator('#kanban-entry-modal')
+  await expect(kanbanEntryModal).toBeVisible()
+  const target = page.locator('#kanban-move-group')
+  await expect(target.locator('option', { hasText: groupTwo.name })).toHaveCount(1)
+  await expect(target.locator('option', { hasText: groupOne.name })).toHaveCount(0)
+
+  await target.selectOption({ label: groupTwo.name })
+  await page.locator('#kanban-move-group-button').click()
+  await expect(kanbanEntryModal).toBeHidden()
+
+  // The entry now belongs to the second group, also after a fresh load
+  await expect(card).toContainText(`Group: ${groupTwo.name}`)
+  await page.reload()
+  await expect(card).toContainText(`Group: ${groupTwo.name}`)
+  await expect(page.locator('#Done-kanban-lane').getByText('move me', { exact: true })).toHaveCount(1)
+
+  expect(await groupEntryTitles(page, groupOneId)).not.toContain('move me')
+  expect(await groupEntryTitles(page, groupTwoId)).toContain('move me')
+})
+
+// A owns the source group, B the target group, and C is a member of both without delete rights in the
+// source or create rights in the target. Moving an entry must be refused and leave both boards untouched.
+test('Kanban-ChangeGroup-NoPermission', async ({ page }) => {
+  test.slow()
+
+  const bPage = await newWindow()
+  const cPage = await newWindow()
+
+  await register(page)
+  await register(bPage)
+  await register(cPage)
+
+  const source = await createGroupApi(page, 'Test Kanban Source ' + randomString())
+  const target = await createGroupApi(bPage, 'Test Kanban Target ' + randomString())
+
+  const me = await cPage.request.get(`${process.env.LINK}/api/user`, { headers: await authorized(cPage) })
+  const cId = (await me.json()).id
+
+  for (const groupId of [source, target]) {
+    const joined = await cPage.request.post(`${process.env.LINK}/api/group/${groupId}/join`, {
+      headers: await authorized(cPage),
+    })
+    expect(joined.ok()).toBe(true)
+  }
+
+  const created = await page.request.post(`${process.env.LINK}/api/group/${source}/kanban/entry/create`, {
+    headers: await authorized(page),
+    data: { title: 'stay put', description: 'stay put description', lane: 5, priority: 3 },
+  })
+  expect(created.ok()).toBe(true)
+  const entryId = await created.json()
+
+  await assignRole(page, source, cId, { role_name: 'No delete', delete_kanban_task: false })
+  await assignRole(bPage, target, cId, { role_name: 'No create', create_kanban_task: false })
+
+  // Denied on both ends
+  const denied = await changeGroup(cPage, source, entryId, target)
+  expect(denied.status()).toBe(403)
+
+  // Denied on the source end only
+  await assignRole(bPage, target, cId, { role_name: 'Can create', create_kanban_task: true })
+  const deniedSource = await changeGroup(cPage, source, entryId, target)
+  expect(deniedSource.status()).toBe(403)
+
+  expect(await groupEntryTitles(page, source)).toContain('stay put')
+  expect(await groupEntryTitles(bPage, target)).not.toContain('stay put')
+})
