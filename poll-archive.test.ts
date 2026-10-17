@@ -23,12 +23,9 @@ test('Poll-Without-Proposals-Is-Archived', async ({ page }) => {
   const thumbnail = page.locator('#thumbnails').getByRole('button', { name: title, exact: true })
 
   await test.step('Feed hides the archived poll by default', async () => {
-    // The feed fetches the post list first and the thread list last
-    const feedLoaded = page.waitForResponse(
-      (response: any) => response.url().includes('/group/thread/list') && response.ok(),
-    )
     await gotoGroup(page, group)
-    await feedLoaded
+    // Only shown once the feed has finished loading and has nothing in it
+    await expect(page.getByText('No posts currently here')).toBeVisible()
     await expect(thumbnail).toHaveCount(0)
   })
 
