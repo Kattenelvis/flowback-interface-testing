@@ -71,7 +71,7 @@ test('Accounting: accounts, transactions, filters, paging, printable sheet, dele
     await expect(transactionRow('Opening balance')).toContainText('V1')
     await expect(accountRow('Petty cash')).toContainText('90')
     await expect(accountRow('Bank')).toContainText('-30')
-    await expect(page.locator('#accounting-total-balance')).toContainText('Total balance: 60')
+    await expect(page.locator('#accounting-total-balance')).toContainText(/Total balance\s*60/)
   })
 
   await test.step('Edit a credit transaction and move it to another account', async () => {
@@ -92,7 +92,7 @@ test('Accounting: accounts, transactions, filters, paging, printable sheet, dele
     await expect(transactionRow('Coffee')).toContainText('20')
     await expect(accountRow('Petty cash')).toContainText('100')
     await expect(accountRow('Bank')).toContainText('-50')
-    await expect(page.locator('#accounting-total-balance')).toContainText('Total balance: 50')
+    await expect(page.locator('#accounting-total-balance')).toContainText(/Total balance\s*50/)
   })
 
   await test.step('Another user sees none of it', async () => {
@@ -114,8 +114,6 @@ test('Accounting: accounts, transactions, filters, paging, printable sheet, dele
 
   await test.step('Filter by description, account and date', async () => {
     await expect(transactions).toHaveCount(3)
-    await page.getByRole('button', { name: 'Open Filter Options' }).click()
-
     await page.locator('#accounting-search').fill('rent')
     await expect(transactions).toHaveCount(1)
     await expect(transactionRow('Office rent')).toBeVisible()
@@ -123,11 +121,10 @@ test('Accounting: accounts, transactions, filters, paging, printable sheet, dele
     await expect(transactions).toHaveCount(3)
     await expect(page.locator('#accounting-search')).toHaveValue('')
 
-    await page.getByRole('button', { name: 'Filter Accounts', exact: true }).click()
-    await modal.getByLabel('Bank 1910').check()
-    await modal.getByRole('button', { name: 'Close modal' }).click()
+    await accountRow('Bank').locator('button[aria-pressed]').click()
+    await expect(accountRow('Bank').locator('button[aria-pressed="true"]')).toBeVisible()
     await expect(transactions).toHaveCount(2)
-    await expect(page.locator('#accounting-total-balance')).toContainText('Total balance: -50')
+    await expect(page.locator('#accounting-total-balance')).toContainText(/Total balance\s*-50/)
     await page.getByRole('button', { name: 'Clear Filter' }).click()
     await expect(transactions).toHaveCount(3)
 
@@ -143,9 +140,9 @@ test('Accounting: accounts, transactions, filters, paging, printable sheet, dele
     await page.getByRole('button', { name: 'Generate Printable HTML file' }).click()
     const sheet = readFileSync(await (await download).path(), 'utf8')
 
-    expect(sheet).toContain('<div>Petty cash</div><div>100</div>')
-    expect(sheet).toContain('<div>Bank</div><div>-50</div>')
-    expect(sheet).toContain('Total balance')
+    expect(sheet).toMatch(/Petty cash<\/td><td class="amount">100\.00</)
+    expect(sheet).toMatch(/Bank<\/td><td class="amount">-50\.00</)
+    expect(sheet).toMatch(/Total balance<\/td><td class="amount">50\.00</)
   })
 
   await test.step('Page through many transactions', async () => {
