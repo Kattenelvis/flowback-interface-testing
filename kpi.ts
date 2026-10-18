@@ -34,7 +34,11 @@ export async function kpiBetFull(page: any, value: string | number) {
 // Casts the community's vote on which KPI value actually came true. Only
 // works in the poll's result phase.
 export async function kpiEvaluate(page: any, value: string | number) {
+  const evaluated = page.waitForResponse(
+    (response: any) => response.url().includes('/kpi/vote') && response.request().method() === 'POST',
+  )
   await page.getByRole('button', { name: String(value), exact: true }).click()
+  expect((await evaluated).ok(), `KPI evaluation of ${value} failed`).toBeTruthy()
 }
 
 export async function createKPI(page: any, name = "KPI_TEST") {
