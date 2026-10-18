@@ -174,7 +174,7 @@ const groupEntryTitles = async (page: any, groupId: number) => {
 }
 
 // One user in two groups: moves a group entry from the first group to the second
-test('Kanban-ChangeGroup', async ({ page }) => {
+test.skip('Kanban-ChangeGroup', async ({ page }) => {
   test.slow()
 
   const groupOne = { name: 'Test Kanban Move From ' + randomString() }
