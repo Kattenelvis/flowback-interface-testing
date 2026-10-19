@@ -75,7 +75,7 @@ test('Group-Invite', async ({ page }) => {
   const b = await register(bPage)
 
   await page.getByRole('button', { name: 'Members', exact: true }).click()
-  await page.getByRole('button', { name: 'avatar + Invite user' }).click()
+  await page.getByRole('button', { name: 'avatar Invite user' }).click()
   await page.getByRole('textbox', { name: 'User to invite' }).click()
   await page.getByRole('textbox', { name: 'User to invite' }).fill(b.username)
   await page.getByRole('listitem').getByRole('button').filter({ hasText: /^$/ }).click()
@@ -111,12 +111,12 @@ test('Create-Delete-Group', async ({ page }) => {
 
   // Workgroup testing
   await page.getByRole('button', { name: 'Teams' }).click()
-  await page.getByRole('button', { name: '+ Add Team' }).click()
+  await page.getByRole('button', { name: 'Add Team' }).click()
   await page.getByLabel('Name').click()
   await page.getByLabel('Name').fill('Test Workgroup directjoin')
   await page.getByRole('button', { name: 'Create', exact: true }).click()
   await page.getByRole('button', { name: 'Join', exact: true }).click()
-  await page.getByRole('button', { name: '+ Add Team' }).click()
+  await page.getByRole('button', { name: 'Add Team' }).click()
   await page.getByLabel('No').check()
   await page.getByLabel('Name').click()
   await page.getByLabel('Name').fill('Test group invite only')

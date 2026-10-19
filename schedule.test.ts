@@ -124,7 +124,7 @@ test('Schedule-Switch-Views-Mobile', async ({ page }) => {
 
   await page.setViewportSize({ width: PHONE.height, height: PHONE.width })
   // The add button only gets its full label once the calendar has re-rendered for the wider screen
-  await expect(page.getByRole('button', { name: '+ Create Event' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Create Event' })).toBeVisible()
   await expect(page.locator('.fc-timeGridWeek-view')).toBeVisible()
   await expect(page.locator('.fc-col-header-cell').first()).toHaveAttribute('data-date', firstDay!)
 })
@@ -221,7 +221,7 @@ test.describe(() => {
     const dayOfThisMonth = (day: number) =>
       `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 
-    await page.getByRole('button', { name: '+ Create Event' }).click()
+    await page.getByRole('button', { name: 'Create Event' }).click()
     const title = 'Stretched event ' + randomString()
     await page.getByLabel('Title').fill(title)
     const dates = page.locator("input[type='datetime-local']")
@@ -259,7 +259,7 @@ test.describe(() => {
     const now = new Date()
     const fifteenth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-15`
 
-    await page.getByRole('button', { name: '+ Create Event' }).click()
+    await page.getByRole('button', { name: 'Create Event' }).click()
     const title = 'Daily event ' + randomString()
     await page.getByLabel('Title').fill(title)
     const dates = page.locator("input[type='datetime-local']")

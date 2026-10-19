@@ -117,7 +117,7 @@ test('Workgroup-Chat', async ({ page }) => {
   await gotoGroup(bPage, group)
 
   await page.getByRole('button', { name: 'Teams' }).click()
-  await page.getByRole('button', { name: '+ Add Team' }).click()
+  await page.getByRole('button', { name: 'Add Team' }).click()
   await page.getByLabel('Name').click()
 
   const workgroup = 'Workgroup for chatting in yay' + randomString()
