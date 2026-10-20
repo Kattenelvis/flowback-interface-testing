@@ -45,6 +45,9 @@ test('Create-Edit-Delete-Schedule-Event', async ({ page }) => {
   await page.locator('.fc-event', { hasText: 'Event at 15th' }).first().click()
   await page.waitForTimeout(300)
 
+  // An opened event is read-only until Edit is pressed
+  await page.locator('#Edit').click()
+
   // Edit the event title
   await page.getByLabel('Title').fill('newly edited title')
 
@@ -121,9 +124,47 @@ test('Schedule-Switch-Views-Mobile', async ({ page }) => {
 
   await page.setViewportSize({ width: PHONE.height, height: PHONE.width })
   // The add button only gets its full label once the calendar has re-rendered for the wider screen
-  await expect(page.getByRole('button', { name: '+ Create Event' })).toBeVisible()
+  await expect(page.getByRole('button', { name: 'Create Event' })).toBeVisible()
   await expect(page.locator('.fc-timeGridWeek-view')).toBeVisible()
   await expect(page.locator('.fc-col-header-cell').first()).toHaveAttribute('data-date', firstDay!)
+})
+
+// A repeating event can be subscribed to for reminders after its first occurrence has ended,
+// there are more occurrences to remind about
+test('Schedule-Subscribe-Repeating-Event-After-First-Occurrence', async ({ page }) => {
+  await register(page)
+  const token = await page.evaluate(() => localStorage.getItem('token'))
+
+  const title = 'Repeating event ' + randomString()
+  const start = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000)
+  const response = await page.request.post(`${process.env.LINK}/api/user/schedule/event/create`, {
+    headers: { Authorization: `Token ${token}` },
+    data: {
+      title,
+      start_date: start.toISOString(),
+      end_date: new Date(start.getTime() + 30 * 60 * 1000).toISOString(),
+      repeat_frequency: 1,
+    },
+  })
+  expect(response.ok()).toBe(true)
+
+  await page.goto(`${process.env.LINK}/schedule`)
+  await expect(page.locator('.fc-dayGridMonth-view')).toBeVisible()
+  await page.getByRole('button', { name: 'Next month' }).click()
+
+  const now = new Date()
+  const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 15)
+  const pad = (value: number) => String(value).padStart(2, '0')
+  const date = `${nextMonth.getFullYear()}-${pad(nextMonth.getMonth() + 1)}-15`
+  await page.locator(`.fc-daygrid-day[data-date="${date}"] .fc-daygrid-event`, { hasText: title }).click()
+
+  await page.locator('#notification-bell-event').click()
+  await page.getByRole('button', { name: 'All occurrences', exact: true }).click()
+  const subscribed = page.getByText('Subscribed', { exact: true })
+  const rejected = page.getByText('Event is not active or has already ended.')
+  await expect(subscribed.or(rejected)).toBeVisible()
+  await expect(rejected).toHaveCount(0)
+  await expect(subscribed).toBeVisible()
 })
 
 test.describe(() => {
@@ -160,6 +201,7 @@ test.describe(() => {
 
     // Save it unchanged, then reload so the time shown comes straight from the backend
     await timedEvent.click()
+    await page.locator('#Edit').click()
     await expect(page.getByText(`Edit Event ${title}`)).toBeVisible()
     await page.locator('#Submit').click()
     await expect(page.getByText('Successfully edited event')).toBeVisible()
@@ -179,7 +221,7 @@ test.describe(() => {
     const dayOfThisMonth = (day: number) =>
       `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
 
-    await page.getByRole('button', { name: '+ Create Event' }).click()
+    await page.getByRole('button', { name: 'Create Event' }).click()
     const title = 'Stretched event ' + randomString()
     await page.getByLabel('Title').fill(title)
     const dates = page.locator("input[type='datetime-local']")
@@ -205,6 +247,65 @@ test.describe(() => {
     await page.locator('.fc-daygrid-event', { hasText: title }).first().click()
     await expect(dates.nth(0)).toHaveValue(`${dayOfThisMonth(15)}T10:00`)
     await expect(dates.nth(1)).toHaveValue(`${dayOfThisMonth(16)}T10:30`)
+  })
+
+  // A repeating event is on every day however far ahead the calendar is, and keeps its time of day
+  // when the clocks change (which happens within 8 months from any date)
+  test('Schedule-Daily-Event-Months-Ahead', async ({ page }) => {
+    await register(page)
+    await page.goto(`${process.env.LINK}/schedule`)
+    await expect(page.locator('.fc-dayGridMonth-view')).toBeVisible()
+
+    const now = new Date()
+    const fifteenth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-15`
+
+    await page.getByRole('button', { name: 'Create Event' }).click()
+    const title = 'Daily event ' + randomString()
+    await page.getByLabel('Title').fill(title)
+    const dates = page.locator("input[type='datetime-local']")
+    await dates.nth(0).fill(`${fifteenth}T10:00`)
+    await dates.nth(1).fill(`${fifteenth}T10:30`)
+    await page.locator('.schedule-form select').first().selectOption({ label: 'Daily' })
+    await page.locator('#Submit').click()
+    await expect(page.getByText('Successfully created event')).toBeVisible()
+
+    const occurrences = page.locator('.fc-daygrid-event', { hasText: title })
+    const days = page.locator('.fc-daygrid-day')
+    for (let month = 1; month <= 8; month++) {
+      await page.getByRole('button', { name: 'Next month' }).click()
+      await expect.poll(async () => (await occurrences.count()) === (await days.count())).toBe(true)
+      await expect
+        .poll(async () => [...new Set(await occurrences.locator('.fc-event-time').allInnerTexts())])
+        .toEqual(['10a'])
+    }
+  })
+
+  // The backend lists at most 50 events at a time, all of them are shown
+  test('Schedule-More-Than-50-Events', async ({ page }) => {
+    await register(page)
+    const token = await page.evaluate(() => localStorage.getItem('token'))
+    const [year, month, day] = await page.evaluate(() => {
+      const today = new Date()
+      return [today.getFullYear(), today.getMonth(), today.getDate()]
+    })
+
+    const title = 'Event ' + randomString()
+    for (let minute = 0; minute < 55; minute++) {
+      const start = new Date(Date.UTC(year, month, day, 10, minute))
+      const response = await page.request.post(`${process.env.LINK}/api/user/schedule/event/create`, {
+        headers: { Authorization: `Token ${token}` },
+        data: {
+          title: `${title} ${minute}`,
+          start_date: start.toISOString(),
+          end_date: new Date(start.getTime() + 60 * 1000).toISOString(),
+        },
+      })
+      expect(response.ok()).toBe(true)
+    }
+
+    await page.goto(`${process.env.LINK}/schedule`)
+    await page.getByRole('button', { name: 'Day', exact: true }).click()
+    await expect(page.locator('.fc-timegrid-event', { hasText: title })).toHaveCount(55)
   })
 })
 

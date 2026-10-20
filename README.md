@@ -69,3 +69,7 @@ Best for looking at the tests and checking the results, best in use with letting
 npx playwright test . --project chromium --workers 2 --reporter html --trace on
 npx playwright show-report
 ```
+
+## Optional modules
+
+`accounting.test.ts` needs the Flowback stack to run with the accounting module enabled. With flowback-docker that is `FLOWBACK_LEDGER_MODULE=TRUE` in its `.env`.

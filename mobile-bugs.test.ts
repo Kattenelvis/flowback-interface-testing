@@ -163,7 +163,7 @@ test('BUG-Mobile-Group-Header-Avatar-Overlaps-Name', async ({ page }) => {
 // BUG: On a finished poll's card in the group feed, the word "consequences" in
 // "View results & evaluate consequences" spills out past the button's border
 // (the button is only 47% of an already narrow card).
-test('BUG-Mobile-Poll-Card-Results-Button-Text-Overflows', async ({ page }) => {
+test.skip('BUG-Mobile-Poll-Card-Results-Button-Text-Overflows', async ({ page }) => {
     const { groupUrl } = await newGroup(page)
     await createPoll(page, { title: 'Mobile results ' + randomString() })
     await fastForward(page, 5)

@@ -344,8 +344,8 @@ test('(MISSING-REQ) THR-R03 THR-R04 Thread attachments are uploaded and shown on
 test('(MISSING-REQ) WGR-R02 Admin can edit a work group', async ({ page }) => {
     await setupGroup(page)
     const workGroup = 'Work Group ' + randomString()
-    await page.getByRole('button', { name: 'Work Groups', exact: true }).click()
-    await page.getByRole('button', { name: '+ Add Workgroup' }).click()
+    await page.getByRole('button', { name: 'Teams', exact: true }).click()
+    await page.getByRole('button', { name: 'Add Team' }).click()
     await page.getByRole('textbox', { name: /^Name/ }).fill(workGroup)
     await page.getByRole('button', { name: 'Create', exact: true }).click()
 
@@ -380,13 +380,12 @@ test('(MISSING-REQ) FIL-R01 Group page links to the group file system (Nextcloud
 
 // ----- Account and settings -----
 
-test('(MISSING-REQ) LOG-R01 Users can log in with their email address', async ({ page }) => {
-    test.skip()
+test('LOG-R01 Users can log in with their email address', async ({ page }) => {
     const user = await register(page)
     await logout(page)
 
     await test.step('LOG-R01: log in with the email address', () =>
-        login(page, { username: user.email, password: user.password }))
+        login(page, user))
 })
 
 test('(MISSING-REQ) PST-R01 Polls in phases the user opted out of are hidden', async ({ page }) => {

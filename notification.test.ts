@@ -41,6 +41,33 @@ test('Group-Notification', async ({ page }) => {
   }).toPass()
 })
 
+test('Group-Join-Request-Notification', async ({ page }) => {
+  const bPage = await newWindow()
+
+  const a = await register(page)
+  const b = await register(bPage)
+
+  const group = { name: 'JoinRequestTesting' + randomString(), public: true, invite: true }
+  await createGroup(page, group)
+
+  await joinGroup(bPage, group)
+
+  // The admin never subscribed, join request notifications are on by default.
+  // Notification delivery is async (celery), so reload and reopen the list until it arrives.
+  await expect(async () => {
+    await page.reload()
+    await page.locator('#notifications-list').click()
+    await expect(
+      page.getByRole('button', { name: `${b.username} has requested to join ${group.name}` }).first(),
+    ).toBeVisible({ timeout: 3000 })
+  }).toPass()
+
+  // The requester is not an admin, so gets nothing
+  await bPage.reload()
+  await bPage.locator('#notifications-list').click()
+  await expect(bPage.getByRole('button', { name: /has requested to join/ })).toHaveCount(0)
+})
+
 // TODO: Move this into another test such as Poll-Start-To-Finish or Group-Notification
 // TODO: Add more group notification tests
 test('Poll-Start-To-Finish-Notification', async ({ page }) => {

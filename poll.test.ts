@@ -12,6 +12,7 @@ import {
 } from './poll'
 import { register, newWindow, randomString, idfy } from './generic'
 import { gotoGroup, createArea, createGroup, joinGroup } from './group'
+import { createGroupKPI, kpiEvaluate } from './kpi'
 import 'dotenv/config'
 
 test.describe('Basic-Post-Integration-Tests', () => {
@@ -347,16 +348,23 @@ test.skip('Prediction-Probabilities-2', async ({ page }) => {
 test('Poll-Start-To-Finish', async ({ page }) => {
   // Long multi-phase flow (group, poll, proposals, several fast-forwards, votes, results)
   test.slow()
-  await register(page)
+  const bPage = await newWindow()
 
-  const group = { name: 'Test Poll start to finish ' + randomString(), public: false }
+  await register(page)
+  await register(bPage)
+
+  const group = { name: 'Test Poll start to finish ' + randomString(), public: true }
   await createGroup(page, group)
+  await createGroupKPI(page, { name: 'KPI ' + randomString(), values: [1, 2, 3] })
+  await joinGroup(bPage, group)
+  await gotoGroup(page, group)
 
   // await createArea(page, group, 'Tag 1')
 
   // for (let i = 0; i < 30; i++) {
 
-  await createPoll(page, { title: 'title' + randomString(), phase_time: 1 })
+  const poll = { title: 'title' + randomString(), phase_time: 1 }
+  await createPoll(page, poll)
 
   // await areaVote(page, { area: 'Tag 1' })
   //
@@ -366,6 +374,10 @@ test('Poll-Start-To-Finish', async ({ page }) => {
   const proposal2 = { title: 'Test Proposal 2' + randomString(), vote: 3 }
   await createProposal(page, proposal)
   await createProposal(page, proposal2)
+
+  await page.getByRole('button', { name: 'Comment' }).first().click()
+  await expect(page.getByPlaceholder('Write a comment...').first()).toHaveValue(/^#Test-Proposal/)
+  await page.getByRole('button', { name: 'Comment' }).first().click()
 
   // await predictionStatementCreate(page, proposal)
   //
@@ -384,6 +396,11 @@ test('Poll-Start-To-Finish', async ({ page }) => {
   await fastForward(page, 1)
 
   await results(page)
+
+  // Each member evaluates the KPI once, so a second member's evaluation must not be blocked by the first
+  await kpiEvaluate(page, 1)
+  await goToPost(bPage, poll)
+  await kpiEvaluate(bPage, 2)
 })
 
 test('Date-Poll', async ({ page }) => {

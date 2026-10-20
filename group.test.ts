@@ -2,6 +2,8 @@ import { test, expect } from '@playwright/test'
 import { idfy, newWindow, randomString, register } from './generic'
 import { createGroup, deleteGroup, gotoFirstGroup, gotoGroup, joinGroup } from './group'
 import { createPermission } from './permission'
+import { createPoll } from './poll'
+import { createThread } from './thread'
 
 // TODO: Add test for this situation:
 // User a creates a group which is invite only
@@ -73,7 +75,7 @@ test('Group-Invite', async ({ page }) => {
   const b = await register(bPage)
 
   await page.getByRole('button', { name: 'Members', exact: true }).click()
-  await page.getByRole('button', { name: 'avatar + Invite user' }).click()
+  await page.getByRole('button', { name: 'avatar Invite user' }).click()
   await page.getByRole('textbox', { name: 'User to invite' }).click()
   await page.getByRole('textbox', { name: 'User to invite' }).fill(b.username)
   await page.getByRole('listitem').getByRole('button').filter({ hasText: /^$/ }).click()
@@ -108,13 +110,13 @@ test('Create-Delete-Group', async ({ page }) => {
   await page.getByRole('button', { name: 'No', exact: true }).click()
 
   // Workgroup testing
-  await page.getByRole('button', { name: 'Work Groups' }).click()
-  await page.getByRole('button', { name: '+ Add Workgroup' }).click()
+  await page.getByRole('button', { name: 'Teams' }).click()
+  await page.getByRole('button', { name: 'Add Team' }).click()
   await page.getByLabel('Name').click()
   await page.getByLabel('Name').fill('Test Workgroup directjoin')
   await page.getByRole('button', { name: 'Create', exact: true }).click()
   await page.getByRole('button', { name: 'Join', exact: true }).click()
-  await page.getByRole('button', { name: '+ Add Workgroup' }).click()
+  await page.getByRole('button', { name: 'Add Team' }).click()
   await page.getByLabel('No').check()
   await page.getByLabel('Name').click()
   await page.getByLabel('Name').fill('Test group invite only')
@@ -157,4 +159,47 @@ test('Create-Delete-Group', async ({ page }) => {
   // await page.getByRole('button', { name: 'Yes', exact: true }).click()
   //
   await deleteGroup(page, group)
+})
+
+test('Kicked-User-Cannot-Enter-And-Admin-Keeps-Content', async ({ page }) => {
+  test.slow()
+  const group = { name: 'Test Group Kick ' + randomString(), public: true, invite: true }
+  const poll = { title: 'Kicked Poll ' + randomString(), fastForward: false }
+
+  const bPage = await newWindow()
+
+  await register(page)
+  const b = await register(bPage)
+
+  await createGroup(page, group)
+  await gotoGroup(page, group)
+  const groupUrl = page.url()
+
+  await joinGroup(bPage, group)
+  await page.getByRole('button', { name: 'Members', exact: true }).click()
+  await page.getByRole('button', { name: 'Accept' }).click()
+
+  await gotoGroup(bPage, group)
+  await createPoll(bPage, poll)
+  await gotoGroup(bPage, group)
+  await createThread(bPage, group)
+
+  await gotoGroup(page, group)
+  await page.getByRole('button', { name: 'Members', exact: true }).click()
+  const bMember = page.getByRole('button', { name: `avatar ${b.username}` })
+  await expect(bMember).toBeVisible()
+  await page.locator('div.flex.items-center').filter({ has: bMember }).last().locator('button.bg-transparent').click()
+  await expect(page.getByText(`Kick ${b.username}?`)).toBeVisible()
+  await page.getByRole('button', { name: 'Yes', exact: true }).click()
+  await expect(page.getByText('Successfully removed user')).toBeVisible()
+  await expect(bMember).not.toBeVisible()
+
+  await bPage.goto(groupUrl)
+  await expect(bPage).toHaveURL(`${process.env.LINK}/groups`)
+  await bPage.getByPlaceholder('Search groups').fill(group.name)
+  await expect(bPage.locator(`#join-${idfy(group.name)}`)).toHaveText(/Ask to join/)
+
+  await gotoGroup(page, group)
+  await expect(page.getByText(poll.title).first()).toBeVisible()
+  await expect(page.getByText('Test Thread').first()).toBeVisible()
 })
