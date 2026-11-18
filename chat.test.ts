@@ -116,8 +116,8 @@ test('Workgroup-Chat', async ({ page }) => {
   await joinGroup(bPage, group)
   await gotoGroup(bPage, group)
 
-  await page.getByRole('button', { name: 'Work Groups' }).click()
-  await page.getByRole('button', { name: '+ Add Workgroup' }).click()
+  await page.getByRole('button', { name: 'Teams' }).click()
+  await page.getByRole('button', { name: 'Add Team' }).click()
   await page.getByLabel('Name').click()
 
   const workgroup = 'Workgroup for chatting in yay' + randomString()
@@ -125,7 +125,7 @@ test('Workgroup-Chat', async ({ page }) => {
   await page.getByRole('button', { name: 'Create', exact: true }).click()
   await page.getByRole('button', { name: 'Join', exact: true }).click()
 
-  await bPage.getByRole('button', { name: 'Work Groups' }).click()
+  await bPage.getByRole('button', { name: 'Teams' }).click()
   await bPage.getByRole('button', { name: 'Join', exact: true }).click()
 
   // The chat preview list is only fetched when the Chat component first mounts.
@@ -141,7 +141,7 @@ test('Workgroup-Chat', async ({ page }) => {
   // optimistic message isn't clobbered when getRecentMessages resolves. (The
   // workgroup channel is not empty - it has channel-join info messages.)
   const pageMessages = page.waitForResponse((r: any) =>
-    r.url().includes('/list?order_by=created_at_desc'),
+    r.url().includes('/message/list'),
   )
   await page.getByRole('button', { name: workgroup }).click()
   await pageMessages
@@ -172,12 +172,9 @@ test('Workgroup-Chat', async ({ page }) => {
 // Multi-user "New group" chat: creator A invites B and C, both accept the
 // invite, and all three exchange messages in the shared channel.
 //
-// Backend flow (flowback-backend `user_get_chat_channel`): creating a chat with
-// >2 participants makes a `user_group` MessageChannel, auto-joins the creator,
-// and sends UserChatInvites to the rest. Accepting an invite
-// (UserChatInvite.post_save) flips that user's MessageChannelParticipant to
-// active. Frontend `Preview.svelte` only surfaces invites whose title has >2
-// comma-separated parts, so the title must be `${uA}, ${uB}, ${uC}`.
+// Backend flow (flowback-backend `chat.services.group_chat_create`): the creator
+// joins and everyone else is invited. Accepting an invite makes that user an
+// active member and opens the chat for them.
 test('Group-Chat-Creation', async ({ page }) => {
   test.slow()
   const { username: userA } = await register(page)
@@ -188,20 +185,19 @@ test('Group-Chat-Creation', async ({ page }) => {
   const cPage = await newWindow()
   const { username: userC } = await register(cPage)
 
-  // Title needs >2 comma-separated parts or the invite never shows in Preview.
   const title = `${userA}, ${userB}, ${userC}`
 
   await page.getByRole('button', { name: 'open chat' }).click()
 
-  // Error functionality: confirming with a title but no invited members means
-  // the only participant is the creator, so the backend rejects it ("Cannot
-  // create a chat with yourself") and the frontend shows the error toast.
+  // Error functionality: a group chat needs at least one other member.
   await page.getByRole('button', { name: 'New group' }).click()
   await page.getByRole('button', { name: 'Cancel' }).click()
   await page.getByRole('button', { name: 'New group' }).click()
   await page.getByLabel('Chatgroup Name').fill(title)
   await page.getByRole('button', { name: 'Create group' }).click()
-  await expect(page.getByText('Failed to created group chat')).toBeVisible()
+  await expect(
+    page.getByText('Add at least one other person to the group chat'),
+  ).toBeVisible()
 
   // Invite B and C.
   await page.getByRole('button', { name: 'Add members' }).click()
@@ -230,7 +226,7 @@ test('Group-Chat-Creation', async ({ page }) => {
   // Wait for the accept POST to finish before reloading, otherwise the reload can
   // abort it and the invite never gets accepted.
   const bAccept = bPage.waitForResponse(
-    (r: any) => r.url().includes('/user/chat/invite') && r.request().method() === 'POST',
+    (r: any) => r.url().includes('/accept') && r.request().method() === 'POST',
   )
   await bPage.getByRole('button', { name: 'Accept' }).click()
   await bAccept
@@ -248,7 +244,7 @@ test('Group-Chat-Creation', async ({ page }) => {
   await cPage.reload()
   await cPage.getByRole('button', { name: 'open chat' }).click()
   const cAccept = cPage.waitForResponse(
-    (r: any) => r.url().includes('/user/chat/invite') && r.request().method() === 'POST',
+    (r: any) => r.url().includes('/accept') && r.request().method() === 'POST',
   )
   await cPage.getByRole('button', { name: 'Accept' }).click()
   await cAccept

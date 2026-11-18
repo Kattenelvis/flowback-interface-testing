@@ -23,13 +23,13 @@ export async function newWindow() {
 
 export async function login(
   page: any,
-  { username = 'a', password = 'a' } = {},
+  { email = 'a@flowback.test', password = 'a' } = {},
 ) {
   await page.goto(`${process.env.LINK}/login`)
   await expect(page.locator('#login-page')).toBeVisible()
   await page.waitForTimeout(700)
 
-  await page.fill('input[name="username"]', username)
+  await page.fill('input[name="email"]', email)
   await page.fill('input[name="password"]', password)
   await page.click('button[type="submit"]')
 
@@ -39,13 +39,13 @@ export async function login(
 
 export async function loginEnter(
   page: any,
-  { username = 'a', password = 'a' } = {},
+  { email = 'a@flowback.test', password = 'a' } = {},
 ) {
   await page.goto(`${process.env.LINK}/login`)
   await expect(page.locator('#login-page')).toBeVisible()
   await page.waitForTimeout(700)
 
-  await page.fill('input[name="username"]', username)
+  await page.fill('input[name="email"]', email)
   await page.fill('input[name="password"]', password)
   await page.getByLabel('Password').press('Enter')
 

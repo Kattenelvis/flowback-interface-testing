@@ -38,8 +38,16 @@ export async function waitForPhase(page: any, phase: RegExp) {
   }).toPass({ timeout: 30000 })
 }
 
+const toLocalInput = (date: Date) => {
+  const pad = (n: number) => String(n).padStart(2, '0')
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`
+}
+
 // Only works inside a group. One could use goToGroup before this
-export async function createPoll(page: any, { title = 'Test Poll', date = false, phase_time = 1 } = {}) {
+export async function createPoll(
+  page: any,
+  { title = 'Test Poll', date = false, phase_time = 1, fastForward = true, startDate = null as Date | null } = {},
+) {
   //Create a Poll
   const createPostButton = page.getByRole('button', { name: 'Create a post' })
   await expect(createPostButton).toBeVisible()
@@ -53,9 +61,13 @@ export async function createPoll(page: any, { title = 'Test Poll', date = false,
 
   await page.getByRole('button', { name: 'Display advanced time settings' }).click()
   await page.locator('fieldset').filter({ hasText: 'Public? Yes No' }).getByLabel('Yes').check()
-  await page.locator('fieldset').filter({ hasText: 'Fast Forward? Yes No' }).getByLabel('Yes').check()
+  if (fastForward)
+    await page.locator('fieldset').filter({ hasText: 'Fast Forward? Yes No' }).getByLabel('Yes').check()
 
   await page.getByRole('spinbutton').fill(phase_time.toString())
+
+  // Set after the phase time, since changing it resets the start date
+  if (startDate) await page.locator('input[type="datetime-local"]').first().fill(toLocalInput(startDate))
 
   await page.getByRole('button', { name: 'Post' }).click()
   await expect(page.getByText('Poll Created')).toBeVisible()
